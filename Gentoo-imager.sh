@@ -347,7 +347,7 @@ install -v -m 0755 growpart/growpart.init sdcard/etc/init.d/growpart
 install -v -m 0755 dphys-swapfile/dphys-swapfile sdcard/sbin/dphys-swapfile
 install -v -m 0755 dphys-swapfile/dphys-swapfile.init sdcard/etc/init.d/dphys-swapfile
 install -v -m 0644 dphys-swapfile/dphys-swapfile.conf sdcard/etc/dphys-swapfile
-#cp -aR .git sdcard/root/Gentoo-imager/.git
+cp -aR .git sdcard/root/Gentoo-imager/.git
 
 
 echo -e "${STEP}\n  Mounting the boot partition\n ${NO}"
