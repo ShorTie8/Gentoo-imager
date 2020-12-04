@@ -82,7 +82,7 @@ fi
 if [ ! -e files/Dependencies-ok ]; then
   echo -e "${STEP}\n  Installing dependencies ..  ${NO}"
     if [ -f /etc/gentoo-release ]; then
-      emerge sys-fs/dosfstools sys-fs/multipath-tools sys-apps/pv --quiet-build || fail
+      emerge sys-fs/dosfstools sys-fs/multipath-tools sys-apps/pv sys-block/parted --quiet-build || fail
     else
       apt install binutils dosfstools file kpartx libc6-dev parted psmisc pv xz-utils || fail
     fi
