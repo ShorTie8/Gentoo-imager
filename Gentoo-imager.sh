@@ -172,7 +172,7 @@ if [ ! -d files ]; then
 fi
 
 #	#######################################  Downloads  #############################################
-echo -e "${STEP}\n  Checkin for ${STEP}$ARCH ${STEP} stage3 tarball ${NO}"
+echo -e "${STEP}\n  Checkin for ${DONE}$ARCH ${STEP} stage3 tarball ${NO}"
 #	# For i486, i686 && amd64
 RELEASE_DATE=20201130T214503Z
 RELEASE_DATE_64=20201130T214503Zz
