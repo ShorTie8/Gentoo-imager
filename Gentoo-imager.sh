@@ -175,8 +175,8 @@ fi
 echo -e "${STEP}\n  Checkin for ${DONE}$ARCH ${STEP} stage3 tarball ${NO}"
 #	# For i486, i686 && amd64
 RELEASE_DATE=20201130T214503Z
-RELEASE_DATE_64=20201130T214503Zz
-RELEASE_DATE_arm=20201130T214503z
+RELEASE_DATE_64=20201130T214503Z
+RELEASE_DATE_arm=20201130T214503Z
 RELEASE_DATE_arm64=20201004T190540Z
 
 if [ "$ARCH" = "armv4tl" ] || [ "$ARCH" = "armv5tel" ] || [ "$ARCH" = "armv6j_hardfp" ] || [ "$ARCH" = "armv7a_hardfp" ] && [ ! -f files/stage3-${ARCH}-${RELEASE_DATE_arm}.tar.xz ]; then
@@ -194,10 +194,6 @@ elif [ "$ARCH" = "i486" ] || [ "$ARCH" = "i686" ] && [ ! -f files/stage3-${ARCH}
 elif [ "$ARCH" = "amd64" ] && [ ! -f files/stage3-amd64-${RELEASE_DATE_64}.tar.xz ]; then
   echo -e "${STEP}    Downloadin Stage 3 tarball ${NO}"
   wget -P files http://distfiles.gentoo.org/releases/amd64/autobuilds/${RELEASE_DATE_64}/stage3-amd64-${RELEASE_DATE_64}.tar.xz || fail
-else
-    echo "${OOPS}So, So, Sorry ${STEP},, ${DONE};(~ ${NO} "
-    echo "Unsupported $ARCH stage3 download"
-    exit 1
 fi
 
 if [ "$USE_PORTAGE_LATEST" = "yes" ]; then
