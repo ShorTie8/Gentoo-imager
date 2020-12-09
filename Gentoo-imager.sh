@@ -213,7 +213,7 @@ echo -e "${STEP}   Checking ${DONE}${BOARD} ${STEP}stuff ${NO}"
 if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi4" ]; then
   if [ ! -f files/$DEB_VERSION ] && [ "$USE_FOUNDATION_PRE_COMPILE" = "yes" ]; then
     echo -e "${STEP}    Downloadin Raspiberry pi kernel tarball ${NO}"
-    wget -P files http://archive.raspberrypi.org/debian/pool/main/r/${DEB_VERSION} || fail
+    wget -P files http://archive.raspberrypi.org/debian/pool/main/r/raspberrypi-firmware/${DEB_VERSION} || fail
   fi
   if [ ! -d files/boot_files/${BOARD}/${ARCH} ]; then
     mkdir -vp files/boot_files/${BOARD}/${ARCH}
