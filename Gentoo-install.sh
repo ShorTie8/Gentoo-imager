@@ -30,8 +30,8 @@ if [ "$USE_PORTAGE_LATEST" = "yes" ]; then
   echo -e "${STEP}\n  Nuffin to do, using portage-latest, moving right along  ${NO}"
 else
   start_time=$(date)
-  echo -e "${STEP}\n  emerge ${USE_BINS} ${USE_BINHOST}-webrsync  ${NO}"
-  emerge ${USE_BINS} ${USE_BINHOST}-webrsync
+  echo -e "${STEP}\n  emerge-webrsync  ${NO}"
+  emerge-webrsync
   echo; echo $start_time
   echo $(date); echo
 fi
@@ -66,10 +66,10 @@ echo root:$root_password | chpasswd
 
 
 
-if [ "$ACCEPT_KEYWORDS" = "yes" ]; then
-  echo -e "${STEP}\n  emerge ${USE_BINS} ${USE_BINHOST} --oneshot sys-devel/gcc  ${NO}"
+if [ "$ACCEPT_KEYWORDS" = "yes" ] || [ "$REBUILD_GCC" = "yes" ]; then
+  echo -e "${STEP}\n  emerge --oneshot sys-devel/gcc  ${NO}"
   start_time=$(date)
-  emerge ${USE_BINS} ${USE_BINHOST} --oneshot sys-devel/gcc --quiet-build
+  emerge --oneshot sys-devel/gcc --quiet-build
   echo; echo $start_time
   echo $(date); echo
   gcc-config --list-profiles
@@ -93,7 +93,7 @@ else
 fi
 
 
-if [ "$REBUILD_GCC" = "yes" ]; then
+if [ "$ACCEPT_KEYWORDS" = "yes" ] || [ "$REBUILD_GCC" = "yes" ]; then
   echo -e "${STEP}\n  emerge ${USE_BINS} ${USE_BINHOST} @system  ${NO}"
   start_time=$(date)
   emerge ${USE_BINS} ${USE_BINHOST} @system --quiet-build
