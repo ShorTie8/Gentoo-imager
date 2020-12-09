@@ -85,7 +85,7 @@ NO="\033[0m"         # normal/light
 echo -e "${STEP}\n  Setting ARCH ${NO}"
 if [ "$1" = "armv4tl" ] || [ `uname -m` = "armv4tl" ]; then
     ARCH=armv4tl
-if [ "$1" = "armv5tel" ] || [ `uname -m` = "armv5tel" ]; then
+elif [ "$1" = "armv5tel" ] || [ `uname -m` = "armv5tel" ]; then
     ARCH=armv5tel
 elif [ "$1" = "armv6j" ] || [ `uname -m` = "armv6j" ]; then
     ARCH=armv6j_hardfp
