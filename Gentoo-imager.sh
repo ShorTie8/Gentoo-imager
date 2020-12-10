@@ -212,10 +212,10 @@ if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi4" ]; then
     wget -P files http://archive.raspberrypi.org/debian/pool/main/r/raspberrypi-firmware/${DEB_VERSION} || fail
   fi
 
-  if [ ! -f files/boot_files/${BOARD}/${ARCH}/config.txt ]; then
+  if [ ! -f files/${BOARD}/${ARCH}/config.txt ]; then
     echo -e "${STEP}      Downloading config.txt ${NO}"
     if [ "$ARCH" = "arm" ]; then
-      wget https://raw.githubusercontent.com/RPi-Distro/pi-gen/master/stage1/00-boot-files/files/config.txt -O files/boot_files/${BOARD}/${ARCH}/config.txt || fail
+      wget https://raw.githubusercontent.com/RPi-Distro/pi-gen/master/stage1/00-boot-files/files/config.txt -O files/${BOARD}/${ARCH}/config.txt || fail
     else
       wget https://raw.githubusercontent.com/RPi-Distro/pi-gen/master/stage1/00-boot-files/files/config.txt || fail
       sed '4 i #dtoverlay=sdtweak,poll_once=on' config.txt > config.txt.new
@@ -226,7 +226,7 @@ if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi4" ]; then
       sed '/Some settings/G' config.txt.new.4 > config.txt.new.5
       sed '4 i #initramfs initrd-UNAME.gz' config.txt.new.5 > config.txt.new.6
       sed '4 i #kernel=vmlinux-UNAME.img' config.txt.new.6 > config.txt.new.7
-      sed '/Some settings/G' config.txt.new.7 > files/boot_files/${BOARD}/${ARCH}/config.txt
+      sed '/Some settings/G' config.txt.new.7 > files/${BOARD}/${ARCH}/config.txt
       rm -v config.txt config.txt.new config.txt.new.*
       #sed -i 's/#hdmi_safe=1/#hdmi_safe=1/' debs/config.arm64
       #sed -i 's/#hdmi_group=1/hdmi_group=1/' arm64/config.arm64
@@ -238,8 +238,8 @@ if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi4" ]; then
 
 elif [ "$BOARD" = "rock64" ]; then
   echo -e "${STEP}\   Checking ${DONE}${BOARD} ${STEP}stuff ${NO}"
-  if [ ! -d files/boot_files/${BOARD}/${ARCH} ]; then
-    mkdir -vp files/boot_files/${BOARD}/${ARCH}
+  if [ ! -d files/${BOARD}/${ARCH} ]; then
+    mkdir -vp files/${BOARD}/${ARCH}
   fi
   echo "Nuffin yet dum dum !!"
 
@@ -560,7 +560,7 @@ console=serial0,115200 console=tty1 root=PARTUUID=${P2_UUID} rootfstype=ext4 ele
 EOF
 
   echo -e "${STEP}\n  Copy config.txt ${NO}"
-  cp -v files/boot_files/${BOARD}/${ARCH}/config.txt sdcard/boot/config.txt
+  cp -v files/${BOARD}/${ARCH}/config.txt sdcard/boot/config.txt
 
   echo -e "${STEP}\n  Adding Raspberry Pi tweaks to sysctl.conf ${NO}"
   echo "" >> sdcard/etc/sysctl.conf
