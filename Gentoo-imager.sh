@@ -211,30 +211,6 @@ if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi4" ]; then
     echo -e "${STEP}    Downloadin Raspiberry pi kernel tarball ${NO}"
     wget -P files http://archive.raspberrypi.org/debian/pool/main/r/raspberrypi-firmware/${DEB_VERSION} || fail
   fi
-  if [ ! -d files/boot_files/${BOARD}/${ARCH} ]; then
-    mkdir -vp files/boot_files/${BOARD}/${ARCH}
-  fi
-   if [ ! -d files/boot_files/${BOARD}/${ARCH} ]; then
-    if [ "$ARCH" = "arm" ]; then
-      echo -e "${STEP}      Getting ${ARCH} boot files ${NO}"
-      wget https://raw.githubusercontent.com/RPi-Distro/firmware/debian/boot/LICENCE.broadcom  -O files/boot_files/${BOARD}/${ARCH}/LICENCE.broadcom || fail
-      wget https://raw.githubusercontent.com/RPi-Distro/firmware/debian/boot/bootcode.bin  -O files/boot_files/${BOARD}/${ARCH}/bootcode.bin || fail
-      wget https://raw.githubusercontent.com/RPi-Distro/firmware/debian/boot/fixup.dat  -O files/boot_files/${BOARD}/${ARCH}/fixup.dat || fail
-      wget https://raw.githubusercontent.com/RPi-Distro/firmware/debian/boot/start.elf  -O files/boot_files/${BOARD}/${ARCH}/start.elf || fail
-    else
-      echo -e "${STEP}      Getting ${ARCH} boot files ${NO}"
-      wget https://raw.githubusercontent.com/RPi-Distro/firmware/debian/boot/LICENCE.broadcom  -O files/boot_files/${BOARD}/${ARCH}/LICENCE.broadcom || fail
-      wget https://raw.githubusercontent.com/RPi-Distro/firmware/debian/boot/fixup4.dat  -O files/boot_files/${BOARD}/${ARCH}/fixup4.dat || fail
-      wget https://raw.githubusercontent.com/RPi-Distro/firmware/debian/boot/start4.elf  -O files/boot_files/${BOARD}/${ARCH}/start4.elf || fail
-    fi
-  fi
-  if [ ! -d files/${BOARD}/wifi_extras ]; then
-    echo -e "${STEP}      Getting wifi files ${NO}"
-    mkdir -vp files/${BOARD}/wifi_extras
-    wget  https://github.com/RPi-Distro/firmware-nonfree/raw/master/brcm/brcmfmac43455-sdio.bin -O files/${BOARD}/wifi_extras/brcmfmac43455-sdio.bin || fail
-    wget  https://github.com/RPi-Distro/firmware-nonfree/raw/master/brcm/brcmfmac43455-sdio.clm_blob -O files/${BOARD}/wifi_extras/brcmfmac43455-sdio.clm_blob || fail
-    wget  https://raw.githubusercontent.com/RPi-Distro/firmware-nonfree/master/brcm/brcmfmac43455-sdio.txt -O files/${BOARD}/wifi_extras/brcmfmac43455-sdio.txt || fail
-  fi
 
   if [ ! -f files/boot_files/${BOARD}/${ARCH}/config.txt ]; then
     echo -e "${STEP}      Downloading config.txt ${NO}"
@@ -578,15 +554,6 @@ if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi4" ]; then
   echo -en "${STEP}\n    Modules left are  ${DONE}"; ls sdcard/lib/modules; echo -e "${NO}"
   fi
 
-  echo -e "${STEP}\n    Copy $BITS boot files ${NO}"
-  cp -v files/boot_files/${BOARD}/${ARCH}/* sdcard/boot
-
-  echo -e "${STEP}\n\n    Copy wifi_extras ${NO}"
-  mkdir -vp sdcard/lib/firmware/brcm
-  cp -v files/$BOARD/wifi_extras/brcmfmac43455-sdio.bin sdcard/lib/firmware/brcm/brcmfmac43455-sdio.bin
-  cp -v files/$BOARD/wifi_extras/brcmfmac43455-sdio.clm_blob sdcard/lib/firmware/brcm/brcmfmac43455-sdio.clm_blob
-  cp -v files/$BOARD/wifi_extras/brcmfmac43455-sdio.txt sdcard/lib/firmware/brcm/brcmfmac43455-sdio.txt
-
   echo -e "${STEP}\n  Creating cmdline.txt ${NO}"
   tee sdcard/boot/cmdline.txt <<EOF
 console=serial0,115200 console=tty1 root=PARTUUID=${P2_UUID} rootfstype=ext4 elevator=deadline fsck.repair=yes rootwait quiet
@@ -595,16 +562,16 @@ EOF
   echo -e "${STEP}\n  Copy config.txt ${NO}"
   cp -v files/boot_files/${BOARD}/${ARCH}/config.txt sdcard/boot/config.txt
 
-echo -e "${STEP}\n  Adding Raspberry Pi tweaks to sysctl.conf ${NO}"
-echo "" >> sdcard/etc/sysctl.conf
-echo "# http://www.raspberrypi.org/forums/viewtopic.php?p=104096" >> sdcard/etc/sysctl.conf
-echo "# rpi tweaks" >> sdcard/etc/sysctl.conf
-echo "vm.swappiness = 1" >> sdcard/etc/sysctl.conf
-echo "vm.min_free_kbytes = 8192" >> sdcard/etc/sysctl.conf
-echo "vm.vfs_cache_pressure = 50" >> sdcard/etc/sysctl.conf
-echo "vm.dirty_writeback_centisecs = 1500" >> sdcard/etc/sysctl.conf
-echo "vm.dirty_ratio = 20" >> sdcard/etc/sysctl.conf
-echo "vm.dirty_background_ratio = 10" >> sdcard/etc/sysctl.conf
+  echo -e "${STEP}\n  Adding Raspberry Pi tweaks to sysctl.conf ${NO}"
+  echo "" >> sdcard/etc/sysctl.conf
+  echo "# http://www.raspberrypi.org/forums/viewtopic.php?p=104096" >> sdcard/etc/sysctl.conf
+  echo "# rpi tweaks" >> sdcard/etc/sysctl.conf
+  echo "vm.swappiness = 1" >> sdcard/etc/sysctl.conf
+  echo "vm.min_free_kbytes = 8192" >> sdcard/etc/sysctl.conf
+  echo "vm.vfs_cache_pressure = 50" >> sdcard/etc/sysctl.conf
+  echo "vm.dirty_writeback_centisecs = 1500" >> sdcard/etc/sysctl.conf
+  echo "vm.dirty_ratio = 20" >> sdcard/etc/sysctl.conf
+  echo "vm.dirty_background_ratio = 10" >> sdcard/etc/sysctl.conf
 
 # https://haydenjames.io/raspberry-pi-performance-add-zram-kernel-parameters/
 #vm.vfs_cache_pressure=500
@@ -694,13 +661,13 @@ resize2fs -pM ${rootpart}
 echo -e "${STEP}\n  Checking ${bootpart} ${NO}"
 fsck.fat -traw ${bootpart}
 
-echo -e "${STEP}\n  Create  ${Image_Name}.gz Image ${NO}"
+echo -e "${STEP}\n  Create  Gentoo-${BOARD}-${ARCH}.${DATE}.img.gz Image ${NO}"
 dd if=Image conv=sync,noerror bs=1M status=progress | gzip -c > Gentoo-${BOARD}-${ARCH}.${DATE}.img.gz
 #dd if=Image conv=sync,noerror bs=1M status=progress | xz -k Image_Name
 
 echo -e "${STEP}\n  Create  sha512sum ${NO}"
-sha512sum --tag ${Image_Name}.gz > Gentoo-${BOARD}-${ARCH}.${DATE}.img.gz.sha512sum
-cat ${Image_Name}.gz.sha512sum
+sha512sum --tag Gentoo-${BOARD}-${ARCH}.${DATE}.img.gz > Gentoo-${BOARD}-${ARCH}.${DATE}.img.gz.sha512sum
+cat Gentoo-${BOARD}-${ARCH}.${DATE}.img.gz.sha512sum
 
 echo -e "${STEP}\n  losetup -d ${loop_device} ${NO}"
 losetup -d ${loop_device}

@@ -149,8 +149,10 @@ echo -e "${STEP}\n  Install wireless networking tools  ${NO}"
 emerge ${USE_BINS} ${USE_BINHOST} net-wireless/iw --quiet-build
 
 if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi4" ]; then
+  echo -e "${STEP}\n  Installing sys-boot/raspberrypi-firmware  ${NO}"
+  emerge sys-boot/raspberrypi-firmware --quiet-build
   echo -e "${STEP}\n  Installing sys-firmware/raspberrypi-wifi-ucode  ${NO}"
-  emerge ${USE_BINS} ${USE_BINHOST} sys-firmware/raspberrypi-wifi-ucode --quiet-build
+  emerge sys-firmware/raspberrypi-wifi-ucode --quiet-build
   echo -e "${STEP}\n  Installing media-libs/raspberrypi-userland  ${NO}"
   emerge ${USE_BINS} ${USE_BINHOST} media-libs/raspberrypi-userland --quiet-build
   # emerge ${USE_BINS} ${USE_BINHOST} -pv sys-kernel/raspberrypi-sources
