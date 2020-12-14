@@ -12,6 +12,8 @@ WARN="\033[1;35m"    # hot pink
 BOUL="\033[1;36m"	 # light blue
 NO="\033[0m"         # normal/light
 
+MAKEOPTS="-j`nproc`"
+
 echo -e "${STEP}  Setting Trap ${NO}"
 trap "echo; echo \"Unmounting /proc\"; exit 1" SIGINT SIGTERM
 
@@ -66,16 +68,25 @@ echo root:$root_password | chpasswd
 
 
 
-if [ "$ACCEPT_KEYWORDS" = "yes" ] || [ "$REBUILD_GCC" = "yes" ]; then
+echo -e "${STEP}\n  Checking/Adjusting gcc verions ${NO}"
+CURRENT_VERSION=gcc-`gcc --version | grep gcc | cut -d" " -f3`
+PORTAGE_VERSION=`emerge -pv sys-devel/gcc | grep gcc- | cut -d"/" -f2 | cut -d":" -f1`
+echo "    CURRENT_VERSION is $CURRENT_VERSION"
+echo "    PORTAGE_VERSION is $PORTAGE_VERSION"
+sed -i "s/GCC_VERSION/$PORTAGE_VERSION/g" /etc/portage/make.conf
+
+
+if [ "$CURRENT_VERSION" != "$PORTAGE_VERSION" ] || [ "$REBUILD_GCC" = "yes" ]; then
   echo -e "${STEP}\n  emerge --oneshot sys-devel/gcc  ${NO}"
   start_time=$(date)
-  emerge --oneshot sys-devel/gcc --quiet-build
+  emerge ${JOBS} --oneshot sys-devel/gcc --quiet-build
   echo; echo $start_time
   echo $(date); echo
   gcc-config --list-profiles
   gcc-config 2
   source /etc/profile
   emerge --oneshot --usepkg=n sys-devel/libtool --quiet-build
+  REBUILD_SYSTEM=yes
   echo; echo $start_time
   echo $(date); echo
 fi
@@ -93,7 +104,7 @@ else
 fi
 
 
-if [ "$ACCEPT_KEYWORDS" = "yes" ] || [ "$REBUILD_GCC" = "yes" ]; then
+if [ "$REBUILD_SYSTEM" = "yes" ]; then
   echo -e "${STEP}\n  emerge ${USE_BINS} ${USE_BINHOST} @system  ${NO}"
   start_time=$(date)
   emerge ${USE_BINS} ${USE_BINHOST} @system --quiet-build
@@ -149,6 +160,10 @@ echo -e "${STEP}\n  Install wireless networking tools  ${NO}"
 emerge ${USE_BINS} ${USE_BINHOST} net-wireless/iw --quiet-build
 
 if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi4" ]; then
+  echo -e "${STEP}\n  Installing sys-apps/pv  ${NO}"
+  emerge ${USE_BINS} ${USE_BINHOST} sys-apps/pv --quiet-build
+  echo -e "${STEP}\n    Extracting Raspiberry pi kernel $DEB_VERSION ${NO}"
+  bash /root/update_kernel.sh
   echo -e "${STEP}\n  Installing sys-boot/raspberrypi-firmware  ${NO}"
   emerge sys-boot/raspberrypi-firmware --quiet-build
   echo -e "${STEP}\n  Installing sys-firmware/raspberrypi-wifi-ucode  ${NO}"

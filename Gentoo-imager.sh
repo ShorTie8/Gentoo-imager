@@ -18,14 +18,14 @@ BOARD=pi4
 #	# This is for pi boards and the foudation kernel
 	# USE_FOUNDATION_PRE_COMPILE will use thier deb
 	# else sys-kernel/gentoo-sources will be used
-USE_FOUNDATION_SOURES=yes
-USE_FOUNDATION_PRE_COMPILE=yes
-DEB_VERSION=raspberrypi-kernel_1.20201022-1_arm64.deb
+#USE_FOUNDATION_SOURES=yes
+#USE_FOUNDATION_PRE_COMPILE=yes
+#DEB_VERSION=raspberrypi-kernel_1.20201022-1_arm64.deb
 
 #	# This proforms a emerge @system if you want
 	# which will optimize gcc for your board
 	# just rem out if you do not wish to do this
-REBUILD_GCC=yes
+#REBUILD_GCC=yes
 
 #	# Define your cpu and common flags
 	# format will be COMMON_FLAGS="${CPU} ${COMMON_FLAGS}"
@@ -49,7 +49,7 @@ CREATE_BINS=yes
 USE_BINS=--usepkg
 
 #	# To add the ACCEPT_KEYWORDS ~$ARCH  setting to /etc/portage/make.conf
-ACCEPT_KEYWORDS=yes
+#ACCEPT_KEYWORDS=yes
 
 PROFILE=17.0
 USE=""
@@ -144,7 +144,7 @@ fi
 if [ ! -e files/Dependencies-ok ]; then
   echo -e "${STEP}\n  Installing dependencies ..  ${NO}"
     if [ -f /etc/gentoo-release ]; then
-      emerge sys-fs/dosfstools sys-fs/multipath-tools sys-apps/pv --quiet-build || fail
+      emerge sys-fs/dosfstools sys-fs/multipath-tools sys-block/parted sys-apps/pv --quiet-build || fail
     else
       apt install binutils dosfstools file kpartx libc6-dev parted psmisc pv xz-utils || fail
     fi
@@ -205,7 +205,11 @@ fi
 
 
 #	#################################  Board specific Downloads  ####################################
-echo -e "${STEP}   Checking ${DONE}${BOARD} ${STEP}stuff ${NO}"
+echo -e "${STEP}   Checking for ${DONE}${BOARD} ${STEP}stuff ${NO}"
+if [ ! -d files/${BOARD}/${ARCH} ]; then
+  mkdir -vp files/${BOARD}/${ARCH}
+fi
+
 if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi4" ]; then
   if [ ! -f files/$DEB_VERSION ] && [ "$USE_FOUNDATION_PRE_COMPILE" = "yes" ]; then
     echo -e "${STEP}    Downloadin Raspiberry pi kernel tarball ${NO}"
@@ -235,6 +239,23 @@ if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi4" ]; then
       # dtparam=sd_poll_once
     fi
   fi
+
+#  if [ ! -d files/${BOARD}/${ARCH} ]; then
+#    if [ "$ARCH" = "arm" ]; then
+#      echo -e "${STEP}      Getting ${ARCH} boot files ${NO}"
+#      wget https://raw.githubusercontent.com/RPi-Distro/firmware/debian/boot/LICENCE.broadcom  -O files/${BOARD}/${ARCH}/LICENCE.broadcom || fail
+#      wget https://raw.githubusercontent.com/RPi-Distro/firmware/debian/boot/bootcode.bin  -O files/${BOARD}/${ARCH}/bootcode.bin || fail
+#      wget https://raw.githubusercontent.com/RPi-Distro/firmware/debian/boot/fixup.dat  -O files/${BOARD}/${ARCH}/fixup.dat || fail
+#      wget https://raw.githubusercontent.com/RPi-Distro/firmware/debian/boot/start.elf  -O files/${BOARD}/${ARCH}/start.elf || fail
+#    else
+#      echo -e "${STEP}      Getting ${ARCH} boot files ${NO}"
+#      wget https://raw.githubusercontent.com/RPi-Distro/firmware/debian/boot/LICENCE.broadcom  -O files/${BOARD}/${ARCH}/LICENCE.broadcom || fail
+#      wget https://raw.githubusercontent.com/RPi-Distro/firmware/debian/boot/fixup4.dat  -O files/${BOARD}/${ARCH}/fixup4.dat || fail
+#      wget https://raw.githubusercontent.com/RPi-Distro/firmware/debian/boot/start4.elf  -O files/${BOARD}/${ARCH}/start4.elf || fail
+#    fi
+#  fi
+
+
 
 elif [ "$BOARD" = "rock64" ]; then
   echo -e "${STEP}\   Checking ${DONE}${BOARD} ${STEP}stuff ${NO}"
@@ -382,6 +403,8 @@ echo "" >> sdcard/etc/portage/make.conf
 if [ "$CREATE_BINS" = "yes" ]; then
   echo "FEATURES=\"buildpkg\"" >> sdcard/etc/portage/make.conf
 fi
+echo "PKGDIR=\"/var/cache/binpkgs/$ARCH/GCC_VERSION/\"" >> sdcard/etc/portage/make.conf
+echo "" >> sdcard/etc/portage/make.conf
 echo "PORTAGE_BINHOST=\"$BIN_HOST_URL\"" >> sdcard/etc/portage/make.conf
 echo "" >> sdcard/etc/portage/make.conf
 echo; cat sdcard/etc/portage/make.conf
@@ -486,30 +509,28 @@ install -v -m 0755 growpart/growpart.init sdcard/etc/init.d/growpart
 install -v -m 0755 dphys-swapfile/dphys-swapfile sdcard/sbin/dphys-swapfile
 install -v -m 0755 dphys-swapfile/dphys-swapfile.init sdcard/etc/init.d/dphys-swapfile
 install -v -m 0644 dphys-swapfile/dphys-swapfile.conf sdcard/etc/dphys-swapfile
+install -v -m 0644 update_kernel.sh sdcard/root/update_kernel.sh
 echo "And .git"
 cp -aR .git sdcard/root/Gentoo-imager/.git
+
+if [ -f files/raspberrypi-kernel_*.deb ]; then
+  mkdir -v sdcard/var/tmp/kernel
+  cp -v files/raspberrypi-kernel_*.deb sdcard/var/tmp/kernel/
+fi
+
 
 #	#####################  Mounting the boot partition and copy stuff  ##############################
 echo -e "${STEP}\n  Mounting the boot partition\n ${NO}"
 mount -v -t vfat -o sync $bootpart sdcard/boot
 
-if [ -f wpa_supplicant.conf ]; then
-  echo -e "${STEP}\n  Coping wpa_supplicant.conf over to sdcard \n ${NO}"
-  cp -v wpa_supplicant.conf sdcard/boot/wpa_supplicant.conf
-fi
-
-
 #	#########################################  Foundation's stuff  #################################
 if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi4" ]; then
   echo -e "${STEP}\n  Doing a  Raspiberry ${DONE}$BOARD${STEP} install ${NO}"
-#  <gavlee> ShorTie: have to add the licenses to /etc/portage/package.license ... something like "sys-boot/raspberrypi-firmware raspberrypi-videocore-bin" in there (without quotes)
-
-
+	# We do this here so emerge can pull packages
   echo -e "${STEP}    Adding stuff to package.license ${NO}"
   echo "media-libs/raspberrypi-userland-bin raspberrypi-videocore-bin" >> sdcard/etc/portage/package.license
   echo "sys-boot/raspberrypi-firmware raspberrypi-videocore-bin" >> sdcard/etc/portage/package.license
   echo "sys-firmware/raspberrypi-wifi-ucode Broadcom" >> sdcard/etc/portage/package.license
-
 
   echo -e "${STEP}    Adding stuff to package.accept_keywords for ~${ARCH} ${NO}"
   mkdir -vp sdcard/etc/portage/package.accept_keywords
@@ -520,47 +541,6 @@ if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi4" ]; then
   echo "sys-firmware/raspberrypi-wifi-ucode ~${ARCH}" >> sdcard/etc/portage/package.accept_keywords/sys-firmware
   echo "sys-kernel/raspberrypi-image ~${ARCH}" >> sdcard/etc/portage/package.accept_keywords/sys-kernel
   echo "sys-kernel/raspberrypi-sources ~${ARCH}" >> sdcard/etc/portage/package.accept_keywords/sys-kernel
-
-
-
-# #if [ ! -f files/$DEB_VERSION ] && [ "$USE_FOUNDATION_PRE_COMPILE" = "yes" ]; then
-  if [ "$USE_FOUNDATION_PRE_COMPILE" = "yes" ]; then
-    if [ ! -d Linux ]; then
-      echo -e "${STEP}    Making Linux directory and extracting deb ${NO}"
-      mkdir -vp Linux
-      cd Linux
-      ar x ../files/$DEB_VERSION
-      cd ..
-    fi
-
-    echo -e "${STEP}    Extracting Raspiberry pi kernel $DEB_VERSION ${NO}"
-    pv Linux/data.tar.xz | tar -Jxpf - --xattrs-include='*.*' --numeric-owner -C sdcard || fail
-
-    KERNEL=$(ls sdcard/lib/modules | grep v8+ | cut -d"-" -f1 | awk '{print$1}')
-    echo -e "${STEP}      Crud Removal for kernel  ${DONE} ${ARCH} ${KERNEL}  ${NO}"
-    if [ "$ARCH" = "arm" ]; then
-      rm -v sdcard/boot/kernel8.img
-      rm -v sdcard/boot/{bcm2711-rpi-4-b.dtb,bcm2711-rpi-cm4.dtb}
-      echo "And /lib/modules/${KERNEL}-v8+"
-      rm -rf sdcard/lib/modules/${KERNEL}-v8+
-    else
-      rm -v sdcard/boot/{kernel.img,kernel7.img,kernel7l.img}
-      rm -v sdcard/boot/{bcm2708-rpi-cm.dtb,bcm2708-rpi-b.dtb,bcm2708-rpi-b-rev1.dtb,bcm2708-rpi-b-plus.dtb}
-      rm -v sdcard/boot/{bcm2708-rpi-zero.dtb,bcm2708-rpi-zero-w.dtb,bcm2709-rpi-2-b.dtb}
-      rm -v sdcard/boot/{bcm2710-rpi-2-b.dtb,bcm2710-rpi-cm3.dtb,bcm2710-rpi-3-b.dtb,bcm2710-rpi-3-b-plus.dtb}
-      echo "And /lib/modules/{${KERNEL}+,${KERNEL}-v7+,${KERNEL}-v7l+}"
-      rm -rf sdcard/lib/modules/{${KERNEL}+,${KERNEL}-v7+,${KERNEL}-v7l+}
-    fi
-  echo -en "${STEP}\n    Modules left are  ${DONE}"; ls sdcard/lib/modules; echo -e "${NO}"
-  fi
-
-  echo -e "${STEP}\n  Creating cmdline.txt ${NO}"
-  tee sdcard/boot/cmdline.txt <<EOF
-console=serial0,115200 console=tty1 root=PARTUUID=${P2_UUID} rootfstype=ext4 elevator=deadline fsck.repair=yes rootwait quiet
-EOF
-
-  echo -e "${STEP}\n  Copy config.txt ${NO}"
-  cp -v files/${BOARD}/${ARCH}/config.txt sdcard/boot/config.txt
 
   echo -e "${STEP}\n  Adding Raspberry Pi tweaks to sysctl.conf ${NO}"
   echo "" >> sdcard/etc/sysctl.conf
@@ -604,6 +584,36 @@ chroot sdcard /root/Gentoo-imager/Gentoo-install.sh || fail
 
 #	#########################  Save files, Clean and Create image  ##################################
 echo -e "${STEP}\n  Returned from /root/Gentoo-imager/Gentoo-install.sh \n ${NO}"
+
+#  We gotta do this here so emerge sys-kernel/raspberrypi-image installs without conflices
+if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi4" ]; then
+  echo -e "${STEP}\n  Creating cmdline.txt ${NO}"
+  mv -v sdcard/boot/cmdline.txt sdcard/boot/cmdline.txt.orig
+  tee sdcard/boot/cmdline.txt <<EOF
+console=serial0,115200 console=tty1 root=PARTUUID=${P2_UUID} rootfstype=ext4 elevator=deadline fsck.repair=yes rootwait quiet
+EOF
+  cp -v sdcard/boot/cmdline.txt sdcard/boot/cmdline.txt.my_backup
+
+  echo -e "${STEP}\n  Copy config.txt ${NO}"
+  mv -v sdcard/boot/config.txt sdcard/boot/config.txt.orig
+  cp -v files/${BOARD}/${ARCH}/config.txt sdcard/boot/config.txt
+  cp -v sdcard/boot/config.txt sdcard/boot/config.txt.my_backup
+fi
+#	#  End
+
+if [ -f wpa_supplicant.conf ]; then
+  echo -e "${STEP}\n  Coping wpa_supplicant.conf over to sdcard \n ${NO}"
+  cp -v wpa_supplicant.conf sdcard/boot/wpa_supplicant.conf
+  cp -v wpa_supplicant.conf sdcard/etc/wpa_supplicant/wpa_supplicant.conf
+fi
+
+echo -e "${STEP}\n  Saving build logs  ${NO}"
+if [ -d build_logs ]; then
+ rm -rf build_logs
+fi
+mkdir -v build_logs
+mv sdcard/var/log/portage/*.log build_logs
+
 
 if [ "$save_files" = "yes" ];then
   if [ ! -d distfiles ]; then
