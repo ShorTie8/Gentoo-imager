@@ -420,6 +420,7 @@ USE_PORTAGE_LATEST=$USE_PORTAGE_LATEST
 USE_BINS=$USE_BINS
 USE_BINHOST=$USE_BINHOST
 
+root_password=$root_password
 hostname=$hostname
 
 EOF
