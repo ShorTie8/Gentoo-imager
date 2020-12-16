@@ -66,15 +66,12 @@ rc-update add net.eth0 default
 echo -e "${STEP}\n  Setting up the root password... ${DONE} $root_password ${NO} "
 echo root:$root_password | chpasswd
 
-
-
 echo -e "${STEP}\n  Checking/Adjusting gcc verions ${NO}"
 CURRENT_VERSION=gcc-`gcc --version | grep gcc | cut -d" " -f3`
 PORTAGE_VERSION=`emerge -pv sys-devel/gcc | grep gcc- | cut -d"/" -f2 | cut -d":" -f1`
 echo "    CURRENT_VERSION is $CURRENT_VERSION"
 echo "    PORTAGE_VERSION is $PORTAGE_VERSION"
 sed -i "s/GCC_VERSION/$PORTAGE_VERSION/g" /etc/portage/make.conf
-
 
 if [ "$CURRENT_VERSION" != "$PORTAGE_VERSION" ] || [ "$REBUILD_GCC" = "yes" ]; then
   echo -e "${STEP}\n  emerge --oneshot sys-devel/gcc  ${NO}"
@@ -91,7 +88,6 @@ if [ "$CURRENT_VERSION" != "$PORTAGE_VERSION" ] || [ "$REBUILD_GCC" = "yes" ]; t
   echo $(date); echo
 fi
 
-
 echo -e "${STEP}\n  Emerging kernel sources  ${NO}"
 if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi4" ] && [ "$USE_FOUNDATION_SOURES" = "yes" ]; then
   #emerge ${USE_BINS} ${USE_BINHOST} sys-kernel/raspberrypi-sources --quiet-build
@@ -103,7 +99,6 @@ else
   emerge ${USE_BINS} ${USE_BINHOST} sys-kernel/gentoo-sources --quiet-build
 fi
 
-
 if [ "$REBUILD_SYSTEM" = "yes" ]; then
   echo -e "${STEP}\n  emerge ${USE_BINS} ${USE_BINHOST} @system  ${NO}"
   start_time=$(date)
@@ -112,11 +107,8 @@ if [ "$REBUILD_SYSTEM" = "yes" ]; then
   echo $(date); echo
 fi
 
-
-
-
-echo -e "${STEP}\n  emerge ${USE_BINS} ${USE_BINHOST} -vuDU @world  ${NO}"
-emerge ${USE_BINS} ${USE_BINHOST} -vuDU @world --quiet-build
+echo -e "${STEP}\n  emerge ${USE_BINS} ${USE_BINHOST} -vuDU --with-bdeps=y @world  ${NO}"
+emerge ${USE_BINS} ${USE_BINHOST} -vuDU --with-bdeps=y @world --quiet-build
 
 #echo -e "${STEP}\n  emerge --depclean \n ${NO}"
 #emerge --depclean
@@ -166,6 +158,14 @@ if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi4" ]; then
   bash /root/update_kernel.sh
   echo -e "${STEP}\n  Installing sys-boot/raspberrypi-firmware  ${NO}"
   emerge sys-boot/raspberrypi-firmware --quiet-build
+  echo -e "${STEP}\n    Crud Removal  ${NO}"
+  if [ "$BOARD" = "pi" ]; then
+    rm -v /boot/{fixup4.dat,fixup4x.dat,fixup4cd.dat,fixup4db.dat}
+    rm -v /boot/{start4.elf,start4x.elf,start4cd.elf,start4db.elf}
+  else
+    rm -v /boot/{bootcode.bin,fixup.dat,fixup_x.dat,fixup_cd.dat,fixup_db.dat}
+    rm -v /boot/{start.elf,start_x.elf,start_cd.elf,start_db.elf}
+  fi
   echo -e "${STEP}\n  Installing sys-firmware/raspberrypi-wifi-ucode  ${NO}"
   emerge sys-firmware/raspberrypi-wifi-ucode --quiet-build
   echo -e "${STEP}\n  Installing media-libs/raspberrypi-userland  ${NO}"
