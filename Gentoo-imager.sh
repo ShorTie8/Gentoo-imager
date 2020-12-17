@@ -67,7 +67,8 @@ keyboard_variant=""		# blank is normal
 keyboard_options=""		# blank is normal
 backspace="guess"		# guess is normal
 
-#USE_PORTAGE_LATEST=yes
+#	# otherwize it uses emerge-webrsync
+USE_PORTAGE_LATEST=yes
 
 #	###################################  End Configuration  #########################################
 
@@ -240,23 +241,6 @@ if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi4" ]; then
     fi
   fi
 
-#  if [ ! -d files/${BOARD}/${ARCH} ]; then
-#    if [ "$ARCH" = "arm" ]; then
-#      echo -e "${STEP}      Getting ${ARCH} boot files ${NO}"
-#      wget https://raw.githubusercontent.com/RPi-Distro/firmware/debian/boot/LICENCE.broadcom  -O files/${BOARD}/${ARCH}/LICENCE.broadcom || fail
-#      wget https://raw.githubusercontent.com/RPi-Distro/firmware/debian/boot/bootcode.bin  -O files/${BOARD}/${ARCH}/bootcode.bin || fail
-#      wget https://raw.githubusercontent.com/RPi-Distro/firmware/debian/boot/fixup.dat  -O files/${BOARD}/${ARCH}/fixup.dat || fail
-#      wget https://raw.githubusercontent.com/RPi-Distro/firmware/debian/boot/start.elf  -O files/${BOARD}/${ARCH}/start.elf || fail
-#    else
-#      echo -e "${STEP}      Getting ${ARCH} boot files ${NO}"
-#      wget https://raw.githubusercontent.com/RPi-Distro/firmware/debian/boot/LICENCE.broadcom  -O files/${BOARD}/${ARCH}/LICENCE.broadcom || fail
-#      wget https://raw.githubusercontent.com/RPi-Distro/firmware/debian/boot/fixup4.dat  -O files/${BOARD}/${ARCH}/fixup4.dat || fail
-#      wget https://raw.githubusercontent.com/RPi-Distro/firmware/debian/boot/start4.elf  -O files/${BOARD}/${ARCH}/start4.elf || fail
-#    fi
-#  fi
-
-
-
 elif [ "$BOARD" = "rock64" ]; then
   echo -e "${STEP}\   Checking ${DONE}${BOARD} ${STEP}stuff ${NO}"
   if [ ! -d files/${BOARD}/${ARCH} ]; then
@@ -353,28 +337,19 @@ else
   fail
 fi
 
-if [ "$USE_BINS" = "--usepkg" ] || [ "$USE_BINHOST" = "--getbinpkg" ]; then
-  echo -e "${STEP}    Coping bin files ${NO}"
-  cp -vR binpkgs/* sdcard/var/cache/binpkgs
-fi
-
 if [ "$USE_PORTAGE_LATEST" = "yes" ]; then
   echo -e "${STEP}    Installing ${DONE}portage-latest ${NO}"
-  pv files/portage-latest.tar.xz | tar -Jxpf - --xattrs-include='*.*' --numeric-owner -C sdcard/usr || fail
-  chown -v -R portage:portage sdcard/usr/portage
+  pv files/portage-latest.tar.xz | tar -Jxpf - --strip-components=1 -C sdcard/var/db/repos/gentoo || fail
   echo -e "${STEP}      Setting up profile ${NO}"
-  mv sdcard/usr/portage/profiles sdcard/var/db/repos/gentoo
-  ##mkdir -vp sdcard/var/db/repos/gentoo/profiles
-  ##cp -aR sdcard/usr/portage/profiles/* sdcard/var/db/repos/gentoo/profiles
-  ##chroot sdcard/etc/portage /bin/ln -sv ../../var/db/repos/gentoo/profiles/default/linux/arm64/17.1 make.profile
-  ##ls -l make.profile
-  ##mv make.profile make.profile.orig
-  ##ln -svf ../../usr/portage/profiles/default/linux/${ARCH}/${PROFILE} make.profile
   pushd sdcard/etc/portage
   ln -svf ../../var/db/repos/gentoo/profiles/default/linux/${ARCH}/${PROFILE} make.profile
   popd
 fi
 
+if [ "$USE_BINS" = "--usepkg" ] || [ "$USE_BINHOST" = "--getbinpkg" ]; then
+  echo -e "${STEP}    Coping bin files ${NO}"
+  cp -R binpkgs/* sdcard/var/cache/binpkgs
+fi
 
 #	#################################  Creating make.conf   #########################################
 echo -e "${STEP}\n  Playing make.conf ${NO}"

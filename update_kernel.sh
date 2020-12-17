@@ -15,12 +15,8 @@ BOUL="\033[1;36m"	 # light blue
 NO="\033[0m"         # normal/light
 
 
-echo -e "${STEP}  Getting Packages ${NO}"
-mkdir -vp /var/tmp/kernel
-pushd /var/tmp/kernel
-wget -q http://archive.raspberrypi.org/debian/dists/buster/main/binary-arm64/Packages || exit 1
-DEB_VERSION=`grep 'raspberrypi-firmware/raspberrypi-kernel-headers' Packages  | cut -d"_" -f2`
-popd
+echo -e "${STEP}  Getting DEB_VERSION ${NO}"
+DEB_VERSION=`curl --silent -L http://archive.raspberrypi.org/debian/dists/buster/main/binary-arm64/Packages | grep 'raspberrypi-firmware/raspberrypi-kernel-headers'  | cut -d"_" -f2`
 
 CURRENT_VERSION=`cat /root/kernel_date` 2>/dev/null
 KERNEL_DEB="raspberrypi-kernel_${DEB_VERSION}_arm64.deb"
