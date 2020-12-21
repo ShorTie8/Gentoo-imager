@@ -8,52 +8,113 @@
 #	and there for release it into the Public Domain.
 
 hostname=tux
-root_password=root
+root_password=wertyuiop
 
-#	# Currently supported boards, it's all I got .. :/~
+#	# This speeds things up, otherwize it uses emerge-webrsync
+USE_PORTAGE_LATEST=yes
+
+#	# To add the ACCEPT_KEYWORDS ~$ARCH  setting to /etc/portage/make.conf.
+	# This will require a rebuild of gcc automagically.
+#ACCEPT_KEYWORDS=yes
+
+#	# Set your profile and use flags
+PROFILE=17.0
+USE="-pam"
+
+BOARD=""
+#	# Set your board, cpu and common flags
+#BOARD=defualt
+#ARCH=`uname -m`
+#CPU="-march=native"
+#COMMON_FLAGS="-O2 -pipe"
+
 #BOARD=pi
-BOARD=pi4
-#BOARD=rock64
+#ARCH=armv6j_hardfp
+#CPU="-march=armv6j_hardfp -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard"
+#COMMON_FLAGS="-O2 -pipe"
 
-#	# This is for pi boards and the foudation kernel
-	# USE_FOUNDATION_PRE_COMPILE will use thier deb
-	# else sys-kernel/gentoo-sources will be used
-#USE_FOUNDATION_SOURES=yes
-#USE_FOUNDATION_PRE_COMPILE=yes
-#DEB_VERSION=raspberrypi-kernel_1.20201022-1_arm64.deb
+#BOARD=pi2
+#ARCH=armv7a_hardfp
+#CPU="-march=armv7a_hardfp -mtune=cortex-a53 -mfpu=vfp -mfloat-abi=hard"
+#COMMON_FLAGS="-O2 -pipe"
 
-#	# This proforms a emerge @system if you want
-	# which will optimize gcc for your board
-	# just rem out if you do not wish to do this
-#REBUILD_GCC=yes
+#BOARD=pi3
+#ARCH=armv7a_hardfp
+#CPU="-march=armv7a_hardfp -mtune=cortex-a72 -mfpu=neon-fp-armv8 -mfloat-abi=hard"
+#COMMON_FLAGS="-O2 -pipe"
 
-#	# Define your cpu and common flags
-	# format will be COMMON_FLAGS="${CPU} ${COMMON_FLAGS}"
-	# https://wiki.gentoo.org/wiki/Safe_CFLAGS#ARMv8-A.2FBCM2837
-#CPU="-march=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard"
-#CPU="--with-cpu=cortex-a53 --with-fpu=neon-fp-armv8 --with-float=hard"
-#CPU="--with-cpu=cortex-a72 --with-fpu=vfp --with-float=hard --enable-linker-build-id"
-#CPU="--with-cpu=cortex-a15 --with-cpu=cortex-a7 --with-fpu=vfpv3-d16 --with-float=hard "
+#BOARD=pi4
+#ARCH=armv7a_hardfp
+#CPU="-march=armv7a_hardfp -mtune=cortex-a72 -mfpu=neon-fp-armv8 -mfloat-abi=hard"
+#COMMON_FLAGS="-O2 -pipe"
 
+#BOARD=pi3-64
+#ARCH=arm64
+#CPU="-march=armv8-a+crc -mtune=cortex-a72"
+#COMMON_FLAGS="-O2 -pipe"
+
+BOARD=pi4-64
+ARCH=arm64
 CPU="-march=armv8-a+crc -mtune=cortex-a72"
 #COMMON_FLAGS="-O2 -pipe"
 COMMON_FLAGS="-O3 -pipe -fPIC"
 
+#BOARD=rock64
+#ARCH=arm64
+#CPU="-march=armv8-a+crc -mtune=cortex-a72"
+#COMMON_FLAGS="-O2 -pipe"
+
+#BOARD=rockpro64
+#ARCH=arm64
+#CPU="-march=armv8-a+crc -mtune=cortex-a72"
+#COMMON_FLAGS="-O2 -pipe"
+
+#BOARD=i686
+#ARCH=i686
+#CPU="-march=i686"
+#COMMON_FLAGS="-O2 -pipe"
+
+#BOARD=amd64
+#ARCH=amd64
+#CPU="-march=x86_64"
+#COMMON_FLAGS="-O2 -pipe"
+
+
+#	# This proforms a emerge @system if you want to optimize to the above settings.
+	# Just rem out if you do not wish to do this.
+	# Note: We do check 'gcc -v' against portage's version to see if rebuild is required.
+#REBUILD_GCC=yes
+
+#	# Set this for a vfat /boot, for pi's and things, otherwize it uses ext4.
+	# Note: We only use 2 or 3 (efi) partitions.
+	# Swap is handled by a file, dphys-swapfile, size is changable in /etc/dphys-swapfile
+	# Defualt is 100meg, To change size, Adjust and either /etc/init.d/dphys-swapfile {stop & start} or reboot.
+BOOT=vfat
+#	# Set this if you need a efi partition.
+	# Thus it uses a gpt partition table instead of msdos.
+#EFI_PARTITION=yes
+
+#	# Makes a compressed image file.
+	# rem'd out so Image/sdcard is still alive.
+MAKE_COMPRESSED_IMAGE=yes
+
+#	# This is for pi boards and the foudation kernel.
+	# USE_FOUNDATION_SOURES will use thier sources, else sys-kernel/gentoo-sources will be used.
+	# USE_FOUNDATION_PRE_COMPILE will use sys-kernel/raspberrypi-image, instead of compiling your own kernel.
+USE_FOUNDATION_SOURES=yes
+USE_FOUNDATION_PRE_COMPILE=yes
+
 #	# This will use roy's binhost if you wish, or any other if added/changed
 	# Many Thankz goes out to Mr.Roy
+BIN_HOST_URL=""
 #USE_BINHOST=--getbinpkg
-BIN_HOST_URL=http://bloodnoc.org/~roy/BINHOSTS/gcc-10.x/armv8a/
+#BIN_HOST_URL=http://bloodnoc.org/~roy/BINHOSTS/gcc-10.x/armv8a/
 
-#	# These will create/use binary packages 
+#	# These will create & use binary packages, for the next run or a binhost some where.
 CREATE_BINS=yes
 USE_BINS=--usepkg
 
-#	# To add the ACCEPT_KEYWORDS ~$ARCH  setting to /etc/portage/make.conf
-#ACCEPT_KEYWORDS=yes
-
-PROFILE=17.0
-USE=""
-
+#	# Set timezone and locals
 timezone=America/New_York
 locales="en_US.UTF-8 UTF-8"
 default_locale=en_US.UTF-8
@@ -66,9 +127,6 @@ keyboard_layout="us"	# must be defined if number_of_keys is defined
 keyboard_variant=""		# blank is normal
 keyboard_options=""		# blank is normal
 backspace="guess"		# guess is normal
-
-#	# otherwize it uses emerge-webrsync
-USE_PORTAGE_LATEST=yes
 
 #	###################################  End Configuration  #########################################
 
@@ -83,29 +141,7 @@ WARN="\033[1;35m"    # hot pink
 BOUL="\033[1;36m"	 # light blue
 NO="\033[0m"         # normal/light
 
-echo -e "${STEP}\n  Setting ARCH ${NO}"
-if [ "$1" = "armv4tl" ] || [ `uname -m` = "armv4tl" ]; then
-    ARCH=armv4tl
-elif [ "$1" = "armv5tel" ] || [ `uname -m` = "armv5tel" ]; then
-    ARCH=armv5tel
-elif [ "$1" = "armv6j" ] || [ `uname -m` = "armv6j" ]; then
-    ARCH=armv6j_hardfp
-elif [ "$1" = "armv7a" ] || [ `uname -m` = "armv7a" ]; then
-    ARCH=armv7a_hardfp
-elif [ `uname -m` = "aarch64" ]; then
-    ARCH=arm64
-elif [ "$1" = "i486" ] || [ `uname -m` = "i486" ]; then
-    ARCH=i486
-elif [ "$1" = "i686" ] || [ `uname -m` = "i686" ]; then
-    ARCH=i686
-elif [ `uname -m` = "amd64" ]; then
-    ARCH=amd64
-else
-    echo "So, So, Sorry ,, ;(~"
-    echo "Unsupported ARCH"
-    exit 1
-fi
-echo -e "${STEP}  Building for ${DONE}${BOARD} ${STEP}for arch ${DONE}${ARCH} ${NO}"
+echo -e "${STEP}  Building for ${DONE}${BOARD} ${STEP}with arch ${DONE}${ARCH} ${NO}"
 
 # Define our oops and set trap
 fail () {
@@ -145,9 +181,9 @@ fi
 if [ ! -e files/Dependencies-ok ]; then
   echo -e "${STEP}\n  Installing dependencies ..  ${NO}"
     if [ -f /etc/gentoo-release ]; then
-      emerge sys-fs/dosfstools sys-fs/multipath-tools sys-block/parted sys-apps/pv --quiet-build || fail
+      emerge sys-fs/dosfstools sys-fs/multipath-tools sys-block/parted sys-apps/pv sys-fs/zerofree --quiet-build || fail
     else
-      apt install binutils dosfstools file kpartx libc6-dev parted psmisc pv xz-utils || fail
+      apt install binutils dosfstools file kpartx libc6-dev parted psmisc pv xz-utils zerofree || fail
     fi
   touch files/Dependencies-ok
 fi
@@ -176,9 +212,9 @@ fi
 echo -e "${STEP}\n  Checkin for ${DONE}$ARCH ${STEP} stage3 tarball ${NO}"
 #	# For i486, i686 && amd64
 RELEASE_DATE=20201130T214503Z
-RELEASE_DATE_64=20201130T214503Z
+RELEASE_DATE_64=20201206T214503Z
 RELEASE_DATE_arm=20201130T214503Z
-RELEASE_DATE_arm64=20201004T190540Z
+RELEASE_DATE_arm64=20201220T000546Z
 
 if [ "$ARCH" = "armv4tl" ] || [ "$ARCH" = "armv5tel" ] || [ "$ARCH" = "armv6j_hardfp" ] || [ "$ARCH" = "armv7a_hardfp" ] && [ ! -f files/stage3-${ARCH}-${RELEASE_DATE_arm}.tar.xz ]; then
   echo -e "${STEP}    Downloadin Stage 3 tarball ${NO}"
@@ -211,11 +247,8 @@ if [ ! -d files/${BOARD}/${ARCH} ]; then
   mkdir -vp files/${BOARD}/${ARCH}
 fi
 
-if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi4" ]; then
-  if [ ! -f files/$DEB_VERSION ] && [ "$USE_FOUNDATION_PRE_COMPILE" = "yes" ]; then
-    echo -e "${STEP}    Downloadin Raspiberry pi kernel tarball ${NO}"
-    wget -P files http://archive.raspberrypi.org/debian/pool/main/r/raspberrypi-firmware/${DEB_VERSION} || fail
-  fi
+if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi2" ] || [ "$BOARD" = "pi3" ] || [ "$BOARD" = "pi4" ] \
+		 || [ "$BOARD" = "pi3-64" ] || [ "$BOARD" = "pi4-64" ]; then
 
   if [ ! -f files/${BOARD}/${ARCH}/config.txt ]; then
     echo -e "${STEP}      Downloading config.txt ${NO}"
@@ -269,7 +302,8 @@ fi
 
 # Create partitions
 echo -e "${STEP}    Creating partitions ${NO}"
-fdisk Image <<EOF
+if [ "$EFI_PARTITION" != "yes" ]; then
+  fdisk Image <<EOF
 o
 n
 p
@@ -287,6 +321,12 @@ p
 w
 EOF
 
+else
+  echo "Yup, gonna get there"
+  exit 1
+fi
+
+
 echo -e "${STEP}\n  Setting up drive mapper ${NO}"
 loop_device=$(losetup --show -f Image) || fail
 
@@ -300,7 +340,7 @@ echo -e "${STEP}      Root partition is ${DONE} $rootpart ${NO}"
 
 # Format partitions
 echo -e "${STEP}    Formating partitions ${NO}"
-if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi4" ]; then
+if [ "$BOOT" = "vfat" ]; then
   echo "mkfs.vfat -n boot $bootpart"
   mkfs.vfat -n BOOT $bootpart
 else
@@ -321,7 +361,7 @@ echo -e "${STEP}\n  Setting up for ${DONE}Stage 3 ${STEP}Install ${NO}"
 mkdir -v sdcard
 mount -v -t ext4 -o sync $rootpart sdcard
 
-#	###########################  Extracting Stage 3 tarball   #######################################
+#	#####################  Extracting Stage 3 tarball and portage-latest  ###########################
 echo -e "${STEP}      Extracting Stage 3 tarball for ${DONE}${ARCH} ${NO}"
 if [ "$ARCH" = "armv4tl" ] || [ "$ARCH" = "armv5tel" ] || [ "$ARCH" = "armv6j_hardfp" ] || [ "$ARCH" = "armv7a_hardfp" ]; then
   pv files/stage3-${ARCH}-${RELEASE_DATE_arm}.tar.xz | tar -Jxpf - --xattrs-include='*.*' --numeric-owner -C sdcard || fail
@@ -346,12 +386,11 @@ if [ "$USE_PORTAGE_LATEST" = "yes" ]; then
   popd
 fi
 
-if [ "$USE_BINS" = "--usepkg" ] || [ "$USE_BINHOST" = "--getbinpkg" ]; then
-  echo -e "${STEP}    Coping bin files ${NO}"
-  cp -R binpkgs/* sdcard/var/cache/binpkgs
-fi
-
 #	#################################  Creating make.conf   #########################################
+echo $BOARD
+echo $CPU
+echo $COMMON_FLAGS
+
 echo -e "${STEP}\n  Playing make.conf ${NO}"
 cp -v sdcard/etc/portage/make.conf sdcard/etc/portage/make.conf-orig
 sed -i 's/COMMON_FLAGS="-O2 -pipe"/#COMMON_FLAGS="-O2 -pipe"/' sdcard/etc/portage/make.conf
@@ -375,6 +414,9 @@ sed '17 i PORT_LOGDIR="/var/log/portage/"' sdcard/etc/portage/make.conf.3 > sdca
 sed '/PORT_LOGDIR/G' sdcard/etc/portage/make.conf.4 > sdcard/etc/portage/make.conf
 rm -v sdcard/etc/portage/make.conf.*
 echo "" >> sdcard/etc/portage/make.conf
+echo "USE=\"$USE\"" >> sdcard/etc/portage/make.conf
+echo "PORTDIR_OVERLAY=\"/usr/local/portage/overlay/\"" >> sdcard/etc/portage/make.conf
+echo "" >> sdcard/etc/portage/make.conf
 if [ "$CREATE_BINS" = "yes" ]; then
   echo "FEATURES=\"buildpkg\"" >> sdcard/etc/portage/make.conf
 fi
@@ -394,6 +436,8 @@ ACCEPT_KEYWORDS=$ACCEPT_KEYWORDS
 USE_PORTAGE_LATEST=$USE_PORTAGE_LATEST
 USE_BINS=$USE_BINS
 USE_BINHOST=$USE_BINHOST
+USE_FOUNDATION_SOURES=$USE_FOUNDATION_SOURES
+USE_FOUNDATION_PRE_COMPILE=$USE_FOUNDATION_PRE_COMPILE
 
 root_password=$root_password
 hostname=$hostname
@@ -427,7 +471,7 @@ EOF
 echo -e "${STEP}\n  Setting up networking ${NO}"
 tee sdcard/etc/conf.d/hostname <<EOF
 # Set the hostname variable to the selected host name
-hostname="#hostname"
+hostname="$hostname"
 
 EOF
 
@@ -469,44 +513,52 @@ PARTUUID=${P2_UUID}  /               ext4    defaults,noatime  0       1
 
 EOF
 
-if [ -d distfiles ]; then
-  echo -e "${STEP}\n  Coping distfiles over to sdcard \n ${NO}"
-  cp distfiles/* sdcard/var/cache/distfiles
-fi
-
 echo -e "${STEP}\n  Copy Gentoo-imager.sh files \n ${NO}"
 install -v -m 0755 -D Gentoo-imager.sh sdcard/root/Gentoo-imager/Gentoo-imager.sh
 install -v -m 0755 Gentoo-install.sh sdcard/root/Gentoo-imager/Gentoo-install.sh
+#install -v -m 0644 Makefile sdcard/root/Gentoo-imager
 install -v -m 0644 READme sdcard/root/Gentoo-imager
-install -v -m 0644 growpart/growpart sdcard/root/Gentoo-imager
-install -v -m 0644 growpart/growpart.init sdcard/root/Gentoo-imager
-install -v -m 0755 growpart/growpart sdcard/usr/bin/growpart
+#install -v -m 0644 -D growpart/* sdcard/root/Gentoo-imager/growpart/
+install -v -m 0644 -D growpart/growpart.init sdcard/root/Gentoo-imager/growpart/
+#install -v -m 0755 growpart/growpart sdcard/usr/bin/growpart
 install -v -m 0755 growpart/growpart.init sdcard/etc/init.d/growpart
+install -v -m 0644 -D dphys-swapfile/* sdcard/root/Gentoo-imager/dphys-swapfile/
 install -v -m 0755 dphys-swapfile/dphys-swapfile sdcard/sbin/dphys-swapfile
 install -v -m 0755 dphys-swapfile/dphys-swapfile.init sdcard/etc/init.d/dphys-swapfile
 install -v -m 0644 dphys-swapfile/dphys-swapfile.conf sdcard/etc/dphys-swapfile
-install -v -m 0644 update_kernel.sh sdcard/root/update_kernel.sh
 echo "And .git"
 cp -aR .git sdcard/root/Gentoo-imager/.git
 
-if [ -f files/raspberrypi-kernel_*.deb ]; then
-  mkdir -v sdcard/var/tmp/kernel
-  cp -v files/raspberrypi-kernel_*.deb sdcard/var/tmp/kernel/
+mkdir -vp sdcard/usr/local/portage/overlay/sys-apps
+cp -vR dphys-swapfile/ebuild/* sdcard/usr/local/portage/overlay/sys-apps
+
+#	##############################  Copy distfiles and binpkgs files  ###############################
+if [ -d distfiles ]; then
+  echo -en "${STEP}\n  Coping distfiles over to sdcard  ${NO}"
+  du -sh distfiles
+  cp distfiles/* sdcard/var/cache/distfiles
 fi
 
+if [ "$USE_BINS" = "--usepkg" ] || [ "$USE_BINHOST" = "--getbinpkg" ]; then
+  echo -en "${STEP}    Coping bin files  ${NO}"
+  du -sh binpkgs
+  cp -R binpkgs/* sdcard/var/cache/binpkgs
+fi
 
 #	#####################  Mounting the boot partition and copy stuff  ##############################
 echo -e "${STEP}\n  Mounting the boot partition\n ${NO}"
 mount -v -t vfat -o sync $bootpart sdcard/boot
 
 #	#########################################  Foundation's stuff  #################################
-if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi4" ]; then
+if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi2" ] || [ "$BOARD" = "pi3" ] || [ "$BOARD" = "pi4" ] \
+		 || [ "$BOARD" = "pi3-64" ] || [ "$BOARD" = "pi4-64" ]; then
   echo -e "${STEP}\n  Doing a  Raspiberry ${DONE}$BOARD${STEP} install ${NO}"
 	# We do this here so emerge can pull packages
   echo -e "${STEP}    Adding stuff to package.license ${NO}"
   echo "media-libs/raspberrypi-userland-bin raspberrypi-videocore-bin" >> sdcard/etc/portage/package.license
   echo "sys-boot/raspberrypi-firmware raspberrypi-videocore-bin" >> sdcard/etc/portage/package.license
   echo "sys-firmware/raspberrypi-wifi-ucode Broadcom" >> sdcard/etc/portage/package.license
+  echo "sys-kernel/raspberrypi-image raspberrypi-videocore-bin" >> sdcard/etc/portage/package.license
 
   echo -e "${STEP}    Adding stuff to package.accept_keywords for ~${ARCH} ${NO}"
   mkdir -vp sdcard/etc/portage/package.accept_keywords
@@ -562,7 +614,8 @@ chroot sdcard /root/Gentoo-imager/Gentoo-install.sh || fail
 echo -e "${STEP}\n  Returned from /root/Gentoo-imager/Gentoo-install.sh \n ${NO}"
 
 #  We gotta do this here so emerge sys-kernel/raspberrypi-image installs without conflices
-if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi4" ]; then
+if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi2" ] || [ "$BOARD" = "pi3" ] || [ "$BOARD" = "pi4" ] \
+		 || [ "$BOARD" = "pi3-64" ] || [ "$BOARD" = "pi4-64" ]; then
   echo -e "${STEP}\n  Creating cmdline.txt ${NO}"
   mv -v sdcard/boot/cmdline.txt sdcard/boot/cmdline.txt.orig
   tee sdcard/boot/cmdline.txt <<EOF
@@ -590,34 +643,41 @@ fi
 mkdir -v build_logs
 mv sdcard/var/log/portage/*.log build_logs
 
-
-if [ "$save_files" = "yes" ];then
-  if [ ! -d distfiles ]; then
-    mkdir -v distfiles
-  fi
-  echo -e "${STEP}\n  Coping distfiles \n ${NO}"
-  rsync -a sdcard/var/cache/distfiles/ distfiles
-fi
-
-if [ "$USE_BINS" = "--usepkg" ] || [ "$USE_BINHOST" = "--getbinpkg" ] || [ "$CREATE_BINS" = "yes" ]; then
-  if [ ! -d binpkgs ]; then
-    mkdir -v binpkgs
-  fi
-  echo -e "${STEP}\n  Coping binpkgs \n ${NO}"
-  rsync -a sdcard/var/cache/binpkgs/ binpkgs
-fi
-
 echo -e "${STEP}\n  emerge --depclean \n ${NO}"
 chroot sdcard emerge --depclean
 
 echo -e "${STEP}\n  eclean distfiles \n ${NO}"
 chroot sdcard eclean distfiles
 
+if [ "$save_files" = "yes" ];then
+  if [ ! -d distfiles ]; then
+    mkdir -v distfiles
+  fi
+  echo -e "${STEP}\n  Coping distfiles  ${NO}"
+  du -sh sdcard/var/cache/distfiles
+  rm distfiles/*
+  mv sdcard/var/cache/distfiles/* distfiles
+fi
+rm sdcard/var/cache/distfiles/*
+
 echo -e "${STEP}\n  eclean packages \n ${NO}"
 chroot sdcard eclean packages
 
+if [ "$USE_BINS" = "--usepkg" ] || [ "$USE_BINHOST" = "--getbinpkg" ] || [ "$CREATE_BINS" = "yes" ]; then
+  if [ ! -d binpkgs ]; then
+    mkdir -v binpkgs
+  fi
+  echo -e "${STEP}\n  Coping binpkgs  ${NO}"
+  du -sh sdcard/var/cache/binpkgs
+  rm -rf binpkgs/*
+  mv sdcard/var/cache/binpkgs/* binpkgs/
+fi
+rm -rf sdcard/var/cache/binpkgs/*
+
 echo -e "${STEP}\n  Checking Install size \n ${NO}"
 chroot sdcard df -h
+
+#<Jannik2099> !note aggi most rk3399 platforms are supported by u-boot, just make the respective defconfig and flash it
 
 sync
 echo -e "${STEP}\n  Total sdcard used ${NO}"; echo
@@ -627,36 +687,52 @@ echo -e "${STEP}\n  Unmounting mount points ${NO}"
 umount -v sdcard/proc
 umount -v sdcard/sys
 umount -v sdcard/dev/pts
-umount -v sdcard/boot
-umount -v sdcard
-rm -rvf sdcard
 
-echo -e "${STEP}\n  Sanity check on ${rootpart} ${NO}"
-file -s ${rootpart}
+if [ "$MAKE_COMPRESSED_IMAGE" = "yes" ]; then
+  echo -e "${STEP}\n  Making compressed image file ${NO}"
+  echo -e "${STEP}    Unmounting mount points ${NO}"
+  umount -v sdcard/boot
+  umount -v sdcard
+  rm -rvf sdcard
 
-echo -e "${STEP}\n  Listing superblocks of ${rootpart} ${NO}"
-dumpe2fs ${rootpart} | grep -i superblock
+  echo -e "${STEP}\n  Sanity check on ${rootpart} ${NO}"
+  file -s ${rootpart}
 
-echo -e "${STEP}\n  Forced file system check of ${rootpart} ${NO}"
-e2fsck -f ${rootpart}
+  echo -e "${STEP}\n  Listing superblocks of ${rootpart} ${NO}"
+  dumpe2fs ${rootpart} | grep -i superblock
 
-echo -e "${STEP}\n  Resizing filesystem to the minimum size of ${rootpart} ${NO}"
-echo -e "${STEP}    This can take awhile... ${NO}"
-resize2fs -pM ${rootpart}
+  echo -e "${STEP}\n  Forced file system check of ${rootpart} ${NO}"
+  e2fsck -f ${rootpart}
 
-echo -e "${STEP}\n  Checking ${bootpart} ${NO}"
-fsck.fat -traw ${bootpart}
+  echo -e "${STEP}\n  Resizing filesystem to the minimum size of ${rootpart} ${NO}"
+  echo -e "${STEP}    This can take awhile... ${NO}"
+  resize2fs -pM ${rootpart}
 
-echo -e "${STEP}\n  Create  Gentoo-${BOARD}-${ARCH}.${DATE}.img.gz Image ${NO}"
-dd if=Image conv=sync,noerror bs=1M status=progress | gzip -c > Gentoo-${BOARD}-${ARCH}.${DATE}.img.gz
-#dd if=Image conv=sync,noerror bs=1M status=progress | xz -k Image_Name
+  echo -e "${STEP}\n  zerofree ${rootpart} ${NO}"
+  zerofree -v ${rootpart}
 
-echo -e "${STEP}\n  Create  sha512sum ${NO}"
-sha512sum --tag Gentoo-${BOARD}-${ARCH}.${DATE}.img.gz > Gentoo-${BOARD}-${ARCH}.${DATE}.img.gz.sha512sum
-cat Gentoo-${BOARD}-${ARCH}.${DATE}.img.gz.sha512sum
+  echo -e "${STEP}\n  Checking ${bootpart} ${NO}"
+  fsck.fat -traw ${bootpart}
 
-echo -e "${STEP}\n  losetup -d ${loop_device} ${NO}"
-losetup -d ${loop_device}
+  if [ "$ACCEPT_KEYWORDS" = "yes" ]; then
+    ARCH=~$ARCH
+  fi
+  
+  echo -e "${STEP}\n  Create  Gentoo-${BOARD}-${ARCH}.${DATE}.img.gz Image ${NO}"
+  dd if=Image conv=sync,noerror bs=1M status=progress | gzip -c > Gentoo-${BOARD}-${ARCH}.${DATE}.img.gz
+  #dd if=Image conv=sync,noerror bs=1M status=progress | xz -k Image_Name
+
+  echo -e "${STEP}\n  Create  sha512sum ${NO}"
+  sha512sum --tag Gentoo-${BOARD}-${ARCH}.${DATE}.img.gz > Gentoo-${BOARD}-${ARCH}.${DATE}.img.gz.sha512sum
+  cat Gentoo-${BOARD}-${ARCH}.${DATE}.img.gz.sha512sum
+
+  echo -e "${STEP}\n  losetup -d ${loop_device} ${NO}"
+  losetup -d ${loop_device}
+else
+  echo -e "${STEP}\n  Living Image live ${NO}"
+  echo -e "${STEP}    Okie Dokie, We Done\n ${NO}"
+  exit 1
+fi
 
 echo -e "${STEP}\n\n  Okie Dokie, We Done\n ${NO}"
 echo -e "${DONE}  Y'all Have A Great Day now   ${NO}"
