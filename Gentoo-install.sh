@@ -71,8 +71,11 @@ if [ "$CURRENT_VERSION" != "$PORTAGE_VERSION" ] || [ "$REBUILD_GCC" = "yes" ]; t
   emerge ${JOBS} --oneshot sys-devel/gcc --quiet-build
   echo; echo $start_time
   echo $(date); echo
-  gcc-config --list-profiles
-  gcc-config 2
+  if [ "$CURRENT_VERSION" != "$PORTAGE_VERSION" ]; then
+    gcc-config --list-profiles
+    gcc-config 2
+  fi
+  rm -v $PKGDIR/$PORTAGE_VERSION.*
   source /etc/profile
   emerge --oneshot --usepkg=n sys-devel/libtool --quiet-build
   REBUILD_SYSTEM=yes
@@ -99,10 +102,7 @@ else
 fi
 echo; echo $start_time
 echo $(date); echo
-
-
-#echo -e "${STEP}\n  emerge --depclean \n ${NO}"
-#emerge --depclean
+#etc-update
 
 echo -e "${STEP}\n  emerge ${USE_BINS} ${USE_BINHOST} gentoolkit  ${NO}"
 emerge ${USE_BINS} ${USE_BINHOST} app-portage/gentoolkit --quiet-build
@@ -110,7 +110,7 @@ emerge ${USE_BINS} ${USE_BINHOST} app-portage/gentoolkit --quiet-build
 echo -e "${STEP}\n  System logger syslog-ng  ${NO}"
 emerge ${USE_BINS} ${USE_BINHOST} app-admin/syslog-ng app-admin/logrotate --quiet-build
 sed -i 's/#rc_logger="NO"/rc_logger="YES"/' /etc/rc.conf
-sed -i 's/#rc_log_path="/var/log/rc.log"/rc_log_path="/var/log/rc.log"/' /etc/rc.conf
+sed -i 's|#rc_log_path="/var/log/rc.log"|rc_log_path="/var/log/rc.log"|' /etc/rc.conf
 rc-update add sshd default
 
 echo -e "${STEP}\n  Cron daemon dcron  ${NO}"
@@ -120,10 +120,12 @@ rc-update add cronie default
 echo -e "${STEP}\n  File indexing  ${NO}"
 emerge ${USE_BINS} ${USE_BINHOST} sys-apps/mlocate --quiet-build
 
-echo -e "${STEP}\n  Automatically start networking at boot  ${NO}"
-cd /etc/init.d
-ln -sv net.lo net.eth0
-rc-update add net.eth0 default
+#echo -e "${STEP}\n  Automatically start networking at boot  ${NO}"
+##cd /etc/init.d
+#pushd /etc/init.d
+#ln -sv net.lo net.eth0
+#popd
+#rc-update add net.eth0 default
 
 echo -e "${STEP}\n  Setting up ${DONE}ssh  ${NO}"
 sed -i 's/.*PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
@@ -147,6 +149,10 @@ emerge ${USE_BINS} ${USE_BINHOST} net-wireless/wireless-regdb --quiet-build
 
 echo -e "${STEP}\n  Install wpa_supplicant  ${NO}"
 emerge ${USE_BINS} ${USE_BINHOST} net-wireless/wpa_supplicant --quiet-build
+rc-update -v add wpa_supplicant
+#pushd /etc/init.d
+#patch -p1 < /root/Gentoo-imager/files/wpa_supplicant.patch
+#popd
 
 echo -e "${STEP}\n  Install wireless networking tools  ${NO}"
 emerge ${USE_BINS} ${USE_BINHOST} net-wireless/iw --quiet-build
@@ -203,10 +209,11 @@ echo -e "${STEP}\n  Adding growpart.init in   ${NO}"
 rc-update add growpart boot
 
 echo -e "${STEP}\n  Adding dphys-swapfile overlay in   ${NO}"
-chown -vR portage:portage /usr/local/portage/overlay/*
-#	# maybe add --ignore-default-opts  ??  --skip-manifest  skip all manifest checks
-ebuild /usr/local/portage/overlay/sys-apps/dphys-swapfile/dphys-swapfile-20100506.5_p2.ebuild manifest
-emerge ${USE_BINS} ${USE_BINHOST} sys-apps/dphys-swapfile
+#chown -vR portage:portage /usr/local/portage/overlay/*
+emerge ${USE_BINS} ${USE_BINHOST} sys-apps/dphys-swapfile --quiet-build
+sed "s/#CONF_SWAPSIZE=/CONF_SWAPSIZE=$swap_size/g" -i /etc/dphys-swapfile
+grep 'CONF_SWAPSIZE=' /etc/dphys-swapfile
+#etc-update
 
 echo -e "${STEP}\n  Adding dphys-swapfile.init in   ${NO}"
 rc-update -v add dphys-swapfile default

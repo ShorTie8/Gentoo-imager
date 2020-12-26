@@ -14,16 +14,19 @@ start_pre() {
   ebegin "Setting up dphys-swapfile swapfile ..."
   # (re-)size/-generate (and also first time install)
   dphys-swapfile setup
+  eend $?
 }
 
 start () {
     ebegin "Starting dphys-swapfile"
     dphys-swapfile swapon
+    eend $?
 }
 
 stop () {
     ebegin "Stopping dphys-swapfile swapfile"
     dphys-swapfile swapoff
+    eend $?
 }
 
 

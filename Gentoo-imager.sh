@@ -7,26 +7,51 @@
 # So, I hereby wave any copyrights,
 #	and there for release it into the Public Domain.
 
+# Included is a growpart init, So / is expanded on 1st boot.
+# Also included is a dphys-swapfile ebuild, so a dynamic swap file can be used.
+#	It is sized in meg's, so a gig swap file be like swap_size=1024
+# The github repository is also included in /root/Gentoo-imager.
+#   It is copied "as-is", so any changes carry on.
+#   And or a 'git diff > my_Gentoo_Imager.diff' can be used for saving your work.
+# If you include a wpa_supplicant.conf here, It will be copied to /etc/wpa_supplicant/wpa_supplicant.conf.
+# Defualt is to create binpkgs and save those and distfiles files here.
+
 hostname=tux
-root_password=wertyuiop
+root_password=root
+swap_size=100
+
+#	# Makes a compressed image file.
+	# rem'd out it leaves Image/sdcard still alive, so you can dd Image to something easily.
+MAKE_COMPRESSED_IMAGE=yes
 
 #	# This speeds things up, otherwize it uses emerge-webrsync
 USE_PORTAGE_LATEST=yes
+
+#	# Set your profile to use, so the symlink is made correctly.
+PROFILE=17.0
+
+#	# Define your USE flags
+	# Note: For a Pesonal Image you may want to change the root_password and re-enable pam.
+#USE=""
+USE="-pam"
 
 #	# To add the ACCEPT_KEYWORDS ~$ARCH  setting to /etc/portage/make.conf.
 	# This will require a rebuild of gcc automagically.
 #ACCEPT_KEYWORDS=yes
 
-#	# Set your profile and use flags
-PROFILE=17.0
-USE="-pam"
+#	# This proforms a emerge @system && @world, can take days if ~ is inabled.
+	# So if you want to optimize gcc for your board to the below settings.
+	# Just rem out if you do not wish to do this.
+	# Pleaze still select your board below, so special board stuff is included/used.
+	# Note: We do check 'gcc -v' against portage's version to see if rebuild is required.
+#REBUILD_GCC=yes
 
 BOARD=""
 #	# Set your board, cpu and common flags
 #BOARD=defualt
-#ARCH=`uname -m`
-#CPU="-march=native"
-#COMMON_FLAGS="-O2 -pipe"
+ARCH=`uname -m`
+CPU="-march=native"
+COMMON_FLAGS="-O2 -pipe"
 
 #BOARD=pi
 #ARCH=armv6j_hardfp
@@ -54,10 +79,9 @@ BOARD=""
 #COMMON_FLAGS="-O2 -pipe"
 
 BOARD=pi4-64
-ARCH=arm64
-CPU="-march=armv8-a+crc -mtune=cortex-a72"
-#COMMON_FLAGS="-O2 -pipe"
-COMMON_FLAGS="-O3 -pipe -fPIC"
+#ARCH=arm64
+#CPU="-march=armv8-a+crc -mtune=cortex-a72"
+#COMMON_FLAGS="-O3 -pipe -fPIC"
 
 #BOARD=rock64
 #ARCH=arm64
@@ -80,23 +104,15 @@ COMMON_FLAGS="-O3 -pipe -fPIC"
 #COMMON_FLAGS="-O2 -pipe"
 
 
-#	# This proforms a emerge @system if you want to optimize to the above settings.
-	# Just rem out if you do not wish to do this.
-	# Note: We do check 'gcc -v' against portage's version to see if rebuild is required.
-#REBUILD_GCC=yes
-
 #	# Set this for a vfat /boot, for pi's and things, otherwize it uses ext4.
 	# Note: We only use 2 or 3 (efi) partitions.
 	# Swap is handled by a file, dphys-swapfile, size is changable in /etc/dphys-swapfile
 	# Defualt is 100meg, To change size, Adjust and either /etc/init.d/dphys-swapfile {stop & start} or reboot.
 BOOT=vfat
+
 #	# Set this if you need a efi partition.
 	# Thus it uses a gpt partition table instead of msdos.
-#EFI_PARTITION=yes
-
-#	# Makes a compressed image file.
-	# rem'd out so Image/sdcard is still alive.
-MAKE_COMPRESSED_IMAGE=yes
+#EFI_PARTITION=yes  NOT fully intagrated yet
 
 #	# This is for pi boards and the foudation kernel.
 	# USE_FOUNDATION_SOURES will use thier sources, else sys-kernel/gentoo-sources will be used.
@@ -140,6 +156,12 @@ STEP="\033[1;34m"    # blue
 WARN="\033[1;35m"    # hot pink
 BOUL="\033[1;36m"	 # light blue
 NO="\033[0m"         # normal/light
+
+if [ "$ARCH" = "aarch64" ]; then
+  echo -en "${STEP}  Resetting  ${DONE}${ARCH} "
+  ARCH=arm64
+  echo -e "${STEP} to ${INFO}${ARCH} ${NO}"
+fi
 
 echo -e "${STEP}  Building for ${DONE}${BOARD} ${STEP}with arch ${DONE}${ARCH} ${NO}"
 
@@ -236,8 +258,8 @@ fi
 if [ "$USE_PORTAGE_LATEST" = "yes" ]; then
   echo -e "${STEP}\n    Downloadin portage-latest tarball ${NO}"
   wget -N -P files http://distfiles.gentoo.org/snapshots/portage-latest.tar.xz || fail
-  wget -N -P files http://distfiles.gentoo.org/snapshots/portage-latest.tar.xz.gpgsig || fail
-  wget -N -P files http://distfiles.gentoo.org/snapshots/portage-latest.tar.xz.md5sum || fail
+  #wget -N -P files http://distfiles.gentoo.org/snapshots/portage-latest.tar.xz.gpgsig || fail
+  #wget -N -P files http://distfiles.gentoo.org/snapshots/portage-latest.tar.xz.md5sum || fail
 fi
 
 
@@ -294,9 +316,9 @@ echo -e "${DONE}\n  Creating Image ${NO}"
 if [ ! -f Image ]; then
   echo -e "${STEP}    Creating a zero-filled file ${NO}"
   if [ "$my_DESKTOP" = "yes" ]; then
-    dd if=/dev/zero of=Image  bs=1M  count=6420 iflag=fullblock
+    dd if=/dev/zero of=Image  bs=1M  count=46420 iflag=fullblock
   else
-    dd if=/dev/zero of=Image  bs=1M  count=16420 iflag=fullblock
+    dd if=/dev/zero of=Image  bs=1M  count=10420 iflag=fullblock
   fi
 fi
 
@@ -386,6 +408,12 @@ if [ "$USE_PORTAGE_LATEST" = "yes" ]; then
   popd
 fi
 
+#	#################################  Copying gentoo.conf  #########################################
+echo -e "${STEP}\n  Copying gentoo.conf ${NO}"
+mkdir -vp sdcard/etc/portage/repos.conf
+#cp -v sdcard/usr/share/portage/config/repos.conf sdcard/etc/portage/repos.conf/gentoo.conf
+mv -v sdcard/usr/share/portage/config/repos.conf sdcard/etc/portage/repos.conf/gentoo.conf
+
 #	#################################  Creating make.conf   #########################################
 echo $BOARD
 echo $CPU
@@ -430,6 +458,10 @@ echo; cat sdcard/etc/portage/make.conf
 echo -e "${STEP}\n  Creating board.conf ${NO}"
 tee sdcard/etc/portage/board.conf <<EOF
 # This file automagically created by Gentoo-imager.sh for Gentoo-install.sh
+hostname=$hostname
+root_password=$root_password
+swap_size=$swap_size
+
 BOARD=$BOARD
 REBUILD_GCC=$REBUILD_GCC
 ACCEPT_KEYWORDS=$ACCEPT_KEYWORDS
@@ -439,17 +471,10 @@ USE_BINHOST=$USE_BINHOST
 USE_FOUNDATION_SOURES=$USE_FOUNDATION_SOURES
 USE_FOUNDATION_PRE_COMPILE=$USE_FOUNDATION_PRE_COMPILE
 
-root_password=$root_password
-hostname=$hostname
 
 EOF
 
-#	#################  Copying gentoo.conf adjust and configure some stuff  #########################
-echo -e "${STEP}\n  Copying gentoo.conf ${NO}"
-mkdir -vp sdcard/etc/portage/repos.conf
-cp -v sdcard/usr/share/portage/config/repos.conf sdcard/etc/portage/repos.conf/gentoo.conf
-#cat sdcard/etc/portage/repos.conf/gentoo.conf
-
+#	#######################  Copying, Adjust and Configure some stuff  ##############################
 echo -e "${STEP}\n  Copy DNS info ${NO}"
 cp -v --dereference /etc/resolv.conf sdcard/etc/
 
@@ -513,26 +538,39 @@ PARTUUID=${P2_UUID}  /               ext4    defaults,noatime  0       1
 
 EOF
 
+#	###############################  Copy Gentoo-imager  ############################################
 echo -e "${STEP}\n  Copy Gentoo-imager.sh files \n ${NO}"
 install -v -m 0755 -D Gentoo-imager.sh sdcard/root/Gentoo-imager/Gentoo-imager.sh
 install -v -m 0755 Gentoo-install.sh sdcard/root/Gentoo-imager/Gentoo-install.sh
 #install -v -m 0644 Makefile sdcard/root/Gentoo-imager
 install -v -m 0644 READme sdcard/root/Gentoo-imager
-#install -v -m 0644 -D growpart/* sdcard/root/Gentoo-imager/growpart/
-install -v -m 0644 -D growpart/growpart.init sdcard/root/Gentoo-imager/growpart/
-#install -v -m 0755 growpart/growpart sdcard/usr/bin/growpart
-install -v -m 0755 growpart/growpart.init sdcard/etc/init.d/growpart
-install -v -m 0644 -D dphys-swapfile/* sdcard/root/Gentoo-imager/dphys-swapfile/
-install -v -m 0755 dphys-swapfile/dphys-swapfile sdcard/sbin/dphys-swapfile
-install -v -m 0755 dphys-swapfile/dphys-swapfile.init sdcard/etc/init.d/dphys-swapfile
-install -v -m 0644 dphys-swapfile/dphys-swapfile.conf sdcard/etc/dphys-swapfile
+cp -vR overlay sdcard/root/Gentoo-imager
+#cp -vR growpart sdcard/root/Gentoo-imager
+#mkdir -vp sdcard/root/Gentoo-imager/files
+#cp -v files/local.start sdcard/root/Gentoo-imager/files/local.start
 echo "And .git"
 cp -aR .git sdcard/root/Gentoo-imager/.git
+install -v -m 0755 files/local.start sdcard/etc/conf.d/local.start
+#install -v -m 0755 growpart/growpart.init sdcard/etc/init.d/growpart
 
-mkdir -vp sdcard/usr/local/portage/overlay/sys-apps
-cp -vR dphys-swapfile/ebuild/* sdcard/usr/local/portage/overlay/sys-apps
+#cp -v files/wpa_supplicant.patch sdcard/root/Gentoo-imager/files/wpa_supplicant.patch
 
-#	##############################  Copy distfiles and binpkgs files  ###############################
+
+#	###############################  Copy overlay  ##################################################
+echo -e "${STEP}\n  Setup overlay   ${NO}"
+#mkdir -vp sdcard/usr/local/portage/overlay/metadata
+#echo "masters = gentoo" > sdcard/usr/local/portage/overlay/metadata/layout.conf
+#mkdir -vp sdard/usr/local/portage/overlay/profiles
+#echo "Gentoo-imager" > sdard/usr/local/portage/overlay/profiles/repo_name
+#echo "$HOSTNAME" > /usr/portage/local/profiles/repo_name
+
+
+mkdir -vp sdcard/usr/local/portage
+cp -vR overlay sdcard/usr/local/portage/
+chroot sdcard chown -vR portage:portage /usr/local/portage/overlay/*
+#echo "$HOSTNAME" > /usr/portage/local/profiles/repo_name
+
+#	###############################  Copy distfiles and binpkgs files  ##############################
 if [ -d distfiles ]; then
   echo -en "${STEP}\n  Coping distfiles over to sdcard  ${NO}"
   du -sh distfiles
@@ -634,6 +672,7 @@ if [ -f wpa_supplicant.conf ]; then
   echo -e "${STEP}\n  Coping wpa_supplicant.conf over to sdcard \n ${NO}"
   cp -v wpa_supplicant.conf sdcard/boot/wpa_supplicant.conf
   cp -v wpa_supplicant.conf sdcard/etc/wpa_supplicant/wpa_supplicant.conf
+  chmod -v 600 sdcard/etc/wpa_supplicant/wpa_supplicant_wired.conf
 fi
 
 echo -e "${STEP}\n  Saving build logs  ${NO}"
@@ -641,7 +680,7 @@ if [ -d build_logs ]; then
  rm -rf build_logs
 fi
 mkdir -v build_logs
-mv sdcard/var/log/portage/*.log build_logs
+cp sdcard/var/log/portage/*.log build_logs
 
 echo -e "${STEP}\n  emerge --depclean \n ${NO}"
 chroot sdcard emerge --depclean
@@ -720,7 +759,6 @@ if [ "$MAKE_COMPRESSED_IMAGE" = "yes" ]; then
   
   echo -e "${STEP}\n  Create  Gentoo-${BOARD}-${ARCH}.${DATE}.img.gz Image ${NO}"
   dd if=Image conv=sync,noerror bs=1M status=progress | gzip -c > Gentoo-${BOARD}-${ARCH}.${DATE}.img.gz
-  #dd if=Image conv=sync,noerror bs=1M status=progress | xz -k Image_Name
 
   echo -e "${STEP}\n  Create  sha512sum ${NO}"
   sha512sum --tag Gentoo-${BOARD}-${ARCH}.${DATE}.img.gz > Gentoo-${BOARD}-${ARCH}.${DATE}.img.gz.sha512sum

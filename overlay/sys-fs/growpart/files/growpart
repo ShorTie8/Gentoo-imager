@@ -16,9 +16,6 @@ depend()
 
 start () {
     ebegin "Starting growpart"
-    if [ -f /boot/wpa_supplicant.conf ]; then
-      cp -v /boot/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf
-    fi
     if fdisk -l | grep mmcblk >/dev/null; then
         ebegin "  growing part /dev/mmcblk0p2"
         bash growpart /dev/mmcblk0 2
@@ -31,7 +28,6 @@ start () {
         sleep 1s
         ebegin "    resize2fs /dev/sda2"
         resize2fs /dev/sda2
-        echo "dtparam=sd_poll_once" >> /boot/config.txt
     fi
     rc-update -v del growpart
 }

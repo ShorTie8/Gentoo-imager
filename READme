@@ -3,12 +3,5 @@ Can be run on either raspios or Gentoo.
 Login root/root
 
 usage: ./Gentoo-imager.sh
-       ./Gentoo-imager.sh armhf, for armhf on arm64
 
-If you include a wpa_supplicant.conf either here or in /boot,
-It will copy it to /etc/wpa_supplicant/wpa_supplicant.conf on 1st boot,
-As growpart.init expands / to the full device.
-
-I've ported and included dphys-swapfile for a swap file.
-Size can be adjust in /etc/dphys-swapfile.
-
+Pleaze see Gentoo_Imager.sh for more details.
