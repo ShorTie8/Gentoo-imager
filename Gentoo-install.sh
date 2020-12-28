@@ -155,6 +155,18 @@ rc-update -v add wifi boot
 echo -e "${STEP}\n  Install wireless networking tools  ${NO}"
 emerge ${USE_BINS} ${USE_BINHOST} net-wireless/iw --quiet-build
 
+echo -e "${STEP}\n  Install ntp  ${NO}"
+emerge ${USE_BINS} ${USE_BINHOST} net-misc/ntp --quiet-build
+rc-update -v add ntp-client default
+echo "" >> /etc/ntp.conf
+echo "server 127.127.1.0" >> /etc/ntp.conf
+echo "fudge  127.127.1.0 stratum 10" >> /etc/ntp.conf
+echo "" >> /etc/ntp.conf
+echo "# To deny other machines from changing the" >> /etc/ntp.conf
+echo "# configuration but allow localhost:" >> /etc/ntp.conf
+echo "restrict default nomodify nopeer noquery" >> /etc/ntp.conf
+echo "restrict 127.0.0.1" >> /etc/ntp.conf
+
 if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi2" ] || [ "$BOARD" = "pi3" ] || [ "$BOARD" = "pi4" ] \
 		 || [ "$BOARD" = "pi3-64" ] || [ "$BOARD" = "pi4-64" ]; then
   echo -e "${STEP}\n  Installing ${DONE} ${BOARD} ${STEP} stuff ${NO}"
@@ -180,7 +192,7 @@ if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi2" ] || [ "$BOARD" = "pi3" ] || [ "$BO
     echo -en "${STEP}    Modules that are left are  ${DONE}"; ls /lib/modules; echo -e "${NO}"
   else
     echo -e "${STEP}\n  Installing sys-boot/raspberrypi-firmware  ${NO}"
-    emerge sys-boot/raspberrypi-firmware --quiet-build
+    emerge ${USE_BINS} ${USE_BINHOST} sys-boot/raspberrypi-firmware --quiet-build
   fi
   echo -e "${STEP}    More Crud Removal  ${NO}"
   if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi2" ] || [ "$BOARD" = "pi3" ] || [ "$BOARD" = "pi4" ]; then
@@ -194,11 +206,40 @@ if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi2" ] || [ "$BOARD" = "pi3" ] || [ "$BO
   eselect news read new
 
   echo -e "${STEP}\n  Installing sys-firmware/raspberrypi-wifi-ucode  ${NO}"
-  emerge sys-firmware/raspberrypi-wifi-ucode --quiet-build
+  emerge ${USE_BINS} ${USE_BINHOST} sys-firmware/raspberrypi-wifi-ucode --quiet-build
   echo -e "${STEP}\n  Installing media-libs/raspberrypi-userland  ${NO}"
   emerge ${USE_BINS} ${USE_BINHOST} media-libs/raspberrypi-userland --quiet-build
   # emerge ${USE_BINS} ${USE_BINHOST} -pv sys-kernel/raspberrypi-sources
-fi
+
+  echo -e "${STEP}\n  Enable software clock  ${NO}"
+  rc-update -v add swclock boot
+  rc-update -v del hwclock boot
+
+  echo -e "${STEP}\n  Enable CPU frequency scaling  ${NO}"
+  emerge ${USE_BINS} ${USE_BINHOST} sys-power/cpupower --quiet-build
+  rc-update -v add cpupower default
+  echo "START_OPTS=\"--governor ondemand\"" >> /etc/conf.d/cpupower
+  echo "STOP_OPTS=\"--governor performance\"" >> /etc/conf.d/cpupower
+  cat /etc/conf.d/cpupower
+
+  # https://wiki.gentoo.org/wiki/Raspberry_Pi/Quick_Install_Guide
+  echo -e "${STEP}\n  Install rng-tools  ${NO}"
+  emerge ${USE_BINS} ${USE_BINHOST} sys-apps/rng-tools --quiet-build
+  if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi2" ]; then
+    echo "bcm2708-rng" >> /etc/modules
+  else
+    echo "bcm2835-rng" >> /etc/modules
+  fi
+  cat /etc/modules
+  echo "" >> /etc/conf.d/rngd
+  echo "RNGD_OPTS=\"-o /dev/random -r /dev/hwrng\"" >> /etc/conf.d/rngd
+  cat /etc/conf.d/rngd | grep RNGD_OPTS
+  
+   # if [ "$I2C_DEV" == "on" ]; then
+   #   echo "i2c-dev" >> /harddisk/etc/modules
+   # fi
+
+fi	# end pi stuff	###############################################################################
 
 echo -e "${STEP}\n  Installing git  ${NO}"
 emerge ${USE_BINS} ${USE_BINHOST} dev-vcs/git --quiet-build
