@@ -150,9 +150,7 @@ emerge ${USE_BINS} ${USE_BINHOST} net-wireless/wireless-regdb --quiet-build
 echo -e "${STEP}\n  Install wpa_supplicant  ${NO}"
 emerge ${USE_BINS} ${USE_BINHOST} net-wireless/wpa_supplicant --quiet-build
 rc-update -v add wpa_supplicant
-#pushd /etc/init.d
-#patch -p1 < /root/Gentoo-imager/files/wpa_supplicant.patch
-#popd
+rc-update -v add wifi boot
 
 echo -e "${STEP}\n  Install wireless networking tools  ${NO}"
 emerge ${USE_BINS} ${USE_BINHOST} net-wireless/iw --quiet-build
@@ -202,21 +200,19 @@ if [ "$BOARD" = "pi" ] || [ "$BOARD" = "pi2" ] || [ "$BOARD" = "pi3" ] || [ "$BO
   # emerge ${USE_BINS} ${USE_BINHOST} -pv sys-kernel/raspberrypi-sources
 fi
 
+echo -e "${STEP}\n  Installing git  ${NO}"
+emerge ${USE_BINS} ${USE_BINHOST} dev-vcs/git --quiet-build
+
 echo -e "${STEP}\n  Installing sys-fs/growpart   ${NO}"
 emerge ${USE_BINS} ${USE_BINHOST} sys-fs/growpart --nodeps --quiet-build
-
-echo -e "${STEP}\n  Adding growpart.init in   ${NO}"
 rc-update add growpart boot
 
-echo -e "${STEP}\n  Adding dphys-swapfile overlay in   ${NO}"
-#chown -vR portage:portage /usr/local/portage/overlay/*
+echo -e "${STEP}\n  Installing dphys-swapfile  ${NO}"
 emerge ${USE_BINS} ${USE_BINHOST} sys-apps/dphys-swapfile --quiet-build
 sed "s/#CONF_SWAPSIZE=/CONF_SWAPSIZE=$swap_size/g" -i /etc/dphys-swapfile
 grep 'CONF_SWAPSIZE=' /etc/dphys-swapfile
-#etc-update
-
-echo -e "${STEP}\n  Adding dphys-swapfile.init in   ${NO}"
 rc-update -v add dphys-swapfile default
+
 
 echo -e "${STEP}\n  Sync'n  ${NO}"
 sync

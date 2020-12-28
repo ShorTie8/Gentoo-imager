@@ -236,7 +236,7 @@ echo -e "${STEP}\n  Checkin for ${DONE}$ARCH ${STEP} stage3 tarball ${NO}"
 RELEASE_DATE=20201130T214503Z
 RELEASE_DATE_64=20201206T214503Z
 RELEASE_DATE_arm=20201130T214503Z
-RELEASE_DATE_arm64=20201220T000546Z
+RELEASE_DATE_arm64=20201223T003511Z
 
 if [ "$ARCH" = "armv4tl" ] || [ "$ARCH" = "armv5tel" ] || [ "$ARCH" = "armv6j_hardfp" ] || [ "$ARCH" = "armv7a_hardfp" ] && [ ! -f files/stage3-${ARCH}-${RELEASE_DATE_arm}.tar.xz ]; then
   echo -e "${STEP}    Downloadin Stage 3 tarball ${NO}"
@@ -545,30 +545,41 @@ install -v -m 0755 Gentoo-install.sh sdcard/root/Gentoo-imager/Gentoo-install.sh
 #install -v -m 0644 Makefile sdcard/root/Gentoo-imager
 install -v -m 0644 READme sdcard/root/Gentoo-imager
 cp -vR overlay sdcard/root/Gentoo-imager
-#cp -vR growpart sdcard/root/Gentoo-imager
-#mkdir -vp sdcard/root/Gentoo-imager/files
-#cp -v files/local.start sdcard/root/Gentoo-imager/files/local.start
 echo "And .git"
 cp -aR .git sdcard/root/Gentoo-imager/.git
-install -v -m 0755 files/local.start sdcard/etc/conf.d/local.start
-#install -v -m 0755 growpart/growpart.init sdcard/etc/init.d/growpart
 
-#cp -v files/wpa_supplicant.patch sdcard/root/Gentoo-imager/files/wpa_supplicant.patch
-
-
-#	###############################  Copy overlay  ##################################################
+#	###############################  Copy overlays  #################################################
 echo -e "${STEP}\n  Setup overlay   ${NO}"
-#mkdir -vp sdcard/usr/local/portage/overlay/metadata
-#echo "masters = gentoo" > sdcard/usr/local/portage/overlay/metadata/layout.conf
-#mkdir -vp sdard/usr/local/portage/overlay/profiles
-#echo "Gentoo-imager" > sdard/usr/local/portage/overlay/profiles/repo_name
-#echo "$HOSTNAME" > /usr/portage/local/profiles/repo_name
-
-
 mkdir -vp sdcard/usr/local/portage
 cp -vR overlay sdcard/usr/local/portage/
 chroot sdcard chown -vR portage:portage /usr/local/portage/overlay/*
 #echo "$HOSTNAME" > /usr/portage/local/profiles/repo_name
+
+#	###############################  Make wifi init  ################################################
+tee sdcard/etc/init.d/wifi <<EOF
+#!/sbin/openrc-run
+# Brought to you by ShorTie  <idiot@dot.com>
+
+description="Moving wpa_supplicant.conf"
+
+start()
+{
+	if [ -f /boot/wpa_supplicant.conf ]; then
+	  /etc/init.d/wpa_supplicant stop
+	  if [ -f /etc/wpa_supplicant/wpa_supplicant.conf ]; then
+	    mv /etc/wpa_supplicant/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf.backup
+	  fi
+	  elog "  Moving wpa_supplicant.conf"
+	  mv -v /boot/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf
+	  chmod 600 /etc/wpa_supplicant/wpa_supplicant_wired.conf
+	  sync
+	  sleep 2
+	  /etc/init.d/wpa_supplicant start
+	fi
+}
+
+EOF
+chmod -v +x sdcard/etc/init.d/wifi
 
 #	###############################  Copy distfiles and binpkgs files  ##############################
 if [ -d distfiles ]; then
@@ -667,13 +678,6 @@ EOF
   cp -v sdcard/boot/config.txt sdcard/boot/config.txt.my_backup
 fi
 #	#  End
-
-if [ -f wpa_supplicant.conf ]; then
-  echo -e "${STEP}\n  Coping wpa_supplicant.conf over to sdcard \n ${NO}"
-  cp -v wpa_supplicant.conf sdcard/boot/wpa_supplicant.conf
-  cp -v wpa_supplicant.conf sdcard/etc/wpa_supplicant/wpa_supplicant.conf
-  chmod -v 600 sdcard/etc/wpa_supplicant/wpa_supplicant_wired.conf
-fi
 
 echo -e "${STEP}\n  Saving build logs  ${NO}"
 if [ -d build_logs ]; then
