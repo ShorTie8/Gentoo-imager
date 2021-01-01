@@ -1,8 +1,10 @@
 # Copyright 1999-2020 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=6
+# Note: BOARD variable can be passed by /etc/portage/make.conf,
+#	like BOARD="pi4-64", otherwise `cat /proc/cpuinfo` will be used.
 
+EAPI=6
 ETYPE=sources
 
 inherit kernel-2 eapi7-ver
@@ -10,11 +12,11 @@ detect_version
 detect_arch
 
 MY_PV=$(ver_cut 4-)
-MY_PV=${MY_PV/p/}
+KV_FULL="raspberrypi-kernel_1.${MY_PV/p/}-1"
 DESCRIPTION="Raspberry Pi kernel sources"
 HOMEPAGE="https://github.com/raspberrypi/linux"
-SRC_URI="https://github.com/raspberrypi/linux/archive/raspberrypi-kernel_1.${MY_PV}-1.tar.gz"
-S="${WORKDIR}/linux-raspberrypi-kernel_1.${MY_PV}-1"
+SRC_URI="https://github.com/raspberrypi/linux/archive/${KV_FULL}.tar.gz"
+S="${WORKDIR}/linux-${KV_FULL}"
 
 KEYWORDS="arm ~arm arm64 ~arm64"
 
@@ -32,66 +34,45 @@ src_prepare() {
 	make mrproper
 }
 
-
 src_configure() {
 	default
-	BOARD=$(cat /proc/cpuinfo | grep "Revision" | cut -d " " -f2 | awk '{print$1}')
+	if [[ ! -v BOARD ]]; then
+	  BOARD=$(cat /proc/cpuinfo | grep "Revision" | cut -d " " -f2 | awk '{print$1}')
+	fi
 	echo ">>>   board tis $BOARD"
 #rpi
   if [ "$(cat /proc/cpuinfo | grep "Hardware" | cut -d " " -f2 | awk '{print$1}')" = "BCM2708" ]; then
     K_DEFCONFIG="bcmrpi_defconfig"
   else
 	case ${BOARD} in
-	  9000c1)
-	    #pi0
+	  900021|900032|900092|900093|900061|9000c1|pi)
 	    K_DEFCONFIG="bcmrpi_defconfig"
 	    ;;
-	  a21041)
-	    #pi2
+	  a01040|a21041|p2)
 	    K_DEFCONFIG="bcm2708_defconfig"
 	    ;;
-	  a22082|a020d3)
-	    #pi3
+	  9020e0|a02042|a22042|a22082|a220a0|a020d3|a32082|a020d3|a22083|a02100|pi3|pi3-64)
 	    arm?
 	      K_DEFCONFIG="bcm2709_defconfig"
 	    arm64?
 	      K_DEFCONFIG="bcmrpi3_defconfig"
 	    ;;
-	  
-	  a03111|b03111|c03111|d03114)
-	    #pi4
+	  a03111|b03111|b03112|c03111|c03112|c03114|d03114|c03130|pi4|pi4-64)
 	    K_DEFCONFIG="bcm2711_defconfig"
 	    ;;
 	  *)
-	    echo "unknown pi"
-	    exit 1
+	    echo "So, So, Sorry, Unknown pi"
+	    exit 3
 	    ;;
 	  esac
   fi
-  echo ">>> make $K_DEFCONFIG"
-  make $K_DEFCONFIG
-  echo ">>> make prepare"
-  make prepare
-  echo ">>> make oldconfig"
-  make oldconfig
 }
 
-postinst_sources() {
-	local K_SYMLINK=1
-
-	# if we are to forcably symlink, delete it if it already exists first.
-	echo ">>>  Checking for symlink"
-	if [[ ${K_SYMLINK} -gt 0 ]]; then
-		[[ -h ${EROOT}usr/src/linux ]] && { rm -v "${EROOT}"usr/src/linux || die; }
-		echo ">>>    Removed old symlink"
-		MAKELINK=1
-	fi
-
-	# if the link doesnt exist, lets create it
-	[[ ! -h ${EROOT}usr/src/linux ]] && MAKELINK=1
-
-	if [[ ${MAKELINK} == 1 ]]; then
-		echo ">>>  Making symlink"
-		ln -svf linux-raspberrypi-kernel_1.${MY_PV}-1 "${EROOT}"usr/src/linux || die
-	fi
+src_compile() {
+	echo ">>> make $K_DEFCONFIG"
+	make $K_DEFCONFIG
+	echo ">>> make prepare"
+	make prepare
+	echo ">>> make oldconfig"
+	make oldconfig
 }
